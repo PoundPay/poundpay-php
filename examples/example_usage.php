@@ -41,7 +41,7 @@ $data = array(
 $response = $client->request("/payment_requests/", "POST", $data);
 
 if($response->is_error) {
-    echo "Received an error ($response->error_name) when creating a payment_request\n";
+    echo "Received an error ({$response->error_name}) when creating a payment_request\n";
     echo "Error Message: {$response->error_msg}\n";
 }
 else {
@@ -60,7 +60,7 @@ else {
 
 $response = $client->request("/payment_requests");
 if($response->is_error) {
-    echo "Received an error ($response->error_name) when listing a payment_request\n";
+    echo "Received an error ({$response->error_name}) when listing a payment_request\n";
     echo "Error Message: {$response->error_msg}\n";
 }
 else {
