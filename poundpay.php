@@ -1,5 +1,4 @@
 <?php
-
 /**
  * PoundPay API Client / Response / Signature Verifier
  *
@@ -50,36 +49,36 @@ class PoundPayAPIClient {
 
     protected $developer_sid;
     protected $auth_token;
-    protected $endpoint;
+    protected $api_uri;
     protected $version;
 
     /*
      * __construct
      *   $developer_sid : Your Developer SID
      *   $auth_token : Your account's auth_token
-     *   $endpoint : The PoundPay REST Service URI, defaults to https://api.poundpay.com
+     *   $api_uri : The PoundPay REST Service URI, defaults to https://api.poundpay.com
      *   $version : The PoundPay API version
      */
     public function __construct($developer_sid,
                                 $auth_token,
-                                $endpoint="https://api.poundpay.com",
+                                $api_uri="https://api.poundpay.com",
                                 $version='silver') {
 
         $this->developer_sid = $developer_sid;
         $this->auth_token = $auth_token;
-        $this->endpoint = $endpoint;
+        $this->api_uri = $api_uri;
         $this->version = $version;
     }
 
     /*
      * request()
      *   Sends an HTTP Request to the PoundPay API
-     *   $path : the URL (relative to the endpoint URL, after the /{version})
+     *   $endpoint : the URL (relative to the endpoint URL, after the /{version})
      *   $method : the HTTP method to use, defaults to GET
      *   $vars : for POST or PUT, a key/value associative array of data to
      *           send, for GET will be appended to the URL as query params
      */
-    public function request($path, $method="GET", $vars=array()) {
+    public function request($endpoint, $method="GET", $vars=array()) {
         $fp = null;
         $tmpfile = "";
         $encoded = "";
@@ -91,7 +90,7 @@ class PoundPayAPIClient {
         $encoded = rtrim($encoded, "&");
 
         // construct full url
-        $url = "{$this->endpoint}/{$this->version}/$path";
+        $url = "{$this->api_uri}/{$this->version}/$endpoint";
 
         // if GET and vars, append them
         if($method == "GET") {
@@ -241,6 +240,4 @@ class PoundPaySignatureVerifier {
     }
 
 }
-
-
 ?>
