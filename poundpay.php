@@ -7,7 +7,7 @@
  * @category   APIClients
  * @package    poundpay
  * @author     PoundPay Inc.
- * @version    v1.0.0
+ * @version    v1.0.1
  * @link       http://dev.poundpay.com/
  * @requires   php-curl, json
  */
@@ -90,7 +90,8 @@ class PoundPayAPIClient {
         $encoded = rtrim($encoded, "&");
 
         // construct full url
-        $url = "{$this->api_uri}/{$this->version}/$endpoint";
+        $endpoint = rtrip($endpoint, "/");  // ensure that they're one slash at the end
+        $url = "{$this->api_uri}/{$this->version}{$endpoint}/";
 
         // if GET and vars, append them
         if($method == "GET") {
@@ -195,7 +196,9 @@ class PoundPayAPIResponse {
             $this->response_json = @json_decode($text);
         }
 
+        $this->is_error = FALSE;
         if($this->error_msg = ($status >= 400)) {
+            $this->is_error = TRUE;
             $this->error_name = $this->response_json['error_name'];
             $this->error_msg = $this->response_json['error_message'];
         }
