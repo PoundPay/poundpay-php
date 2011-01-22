@@ -3,7 +3,7 @@
   <head>
 
   <title>Example Payment</title>
-  <script src="https://www.poundpay.com/js/pmp/pound_pmp.js?<?= rand() ?>"></script>
+  <script src="http://www-sandbox.poundpay.com/js/pmp/pound_pmp.js"></script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
   <style>
   body {
@@ -58,7 +58,7 @@
       </tr>
       <tr>
         <td>server</td>
-        <td><input type="text" class="text" id="server" value="https://www.poundpay.com/"></td>
+        <td><input type="text" class="text" id="server" value="http://www-sandbox.poundpay.com/"></td>
       </tr>
     </table>
     <a href="javascript:;" onclick="startIFrame();">Start Payment IFrame</a>
@@ -90,7 +90,7 @@ function startIFrame() {
   // invoke Pound iframe
   PoundPayment.init({
     success: paymentSuccessCallback,
-    prid: $('#payment_id').val(),
+    payment_request_sid: $('#payment_id').val(),
     server: $('#server').val()
   });
 }
