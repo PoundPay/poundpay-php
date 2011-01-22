@@ -90,7 +90,7 @@ class PoundPayAPIClient {
         $encoded = rtrim($encoded, "&");
 
         // construct full url
-        $endpoint = rtrip($endpoint, "/");  // ensure that they're one slash at the end
+        $endpoint = rtrim($endpoint, "/");  // ensure that they're one slash at the end
         $url = "{$this->api_uri}/{$this->version}{$endpoint}/";
 
         // if GET and vars, append them
