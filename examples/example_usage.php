@@ -47,7 +47,7 @@ if($response->is_error) {
 else {
     echo "Payment Request SID: {$response->response_json['sid']}\n";
     echo "JSON Response: \n";
-    echo $response->response_json;
+    echo $response->response_text;
     echo "\n";
 }
 

@@ -7,7 +7,7 @@
  * @category   APIClients
  * @package    poundpay
  * @author     PoundPay Inc.
- * @version    v1.0.1
+ * @version    v1.0.2
  * @link       http://dev.poundpay.com/
  * @requires   php-curl, json
  */
@@ -188,7 +188,10 @@ class PoundPayAPIResponse {
     public function __construct($url, $text, $status_code) {
         $parsed_url = parse_url($url);
         $this->url = $parsed_url["scheme"] . "//" . $parsed_url["host"];
-        $this->query_string = $parsed_url["query"];
+        $this->query_string = null;
+        if(array_key_exists("query", $parsed_url)){
+            $this->query_string = $parsed_url["query"];
+        }
         $this->response_text = $text;
         $this->status_code = $status_code;
 
@@ -197,7 +200,7 @@ class PoundPayAPIResponse {
         }
 
         $this->is_error = FALSE;
-        if($this->error_msg = ($status >= 400)) {
+        if($this->error_msg = ($status_code >= 400)) {
             $this->is_error = TRUE;
             $this->error_name = $this->response_json['error_name'];
             $this->error_msg = $this->response_json['error_message'];
