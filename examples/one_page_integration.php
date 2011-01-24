@@ -3,8 +3,8 @@
 
   $account_sid = 'DVxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
   $auth_token = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
-  $api_uri = 'http://api-sandbox.poundpay.com';
-  $www_uri = 'http://www-sandbox.poundpay.com';
+  $api_uri = 'https://api-sandbox.poundpay.com';
+  $www_uri = 'https://www-sandbox.poundpay.com';
 
   $client = new PoundPayAPIClient($account_sid, $auth_token, $api_uri);
   $data = array(

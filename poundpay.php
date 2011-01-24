@@ -104,7 +104,6 @@ class PoundPayAPIClient {
         // initialize a new curl object
         $curl = curl_init($url);
 
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 
         switch(strtoupper($method)) {
