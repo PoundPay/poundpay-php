@@ -21,15 +21,15 @@
 
 <html>
   <title>Simple Marketplace</title>
-  <script src="<?php echo $www_uri; ?>/js/pmp/pound_pmp.js"></script>
+  <script src="<?= $www_uri ?>/js/pmp/pound_pmp.js"></script>
   <body>
     <h1>Simple Marketplace</h1>
-    <h2><?php echo $payment_request->description; ?></h2>
+    <h2><?= $payment_request->description ?></h2>
     <div id="pound-root"></div>
     <script type="text/javascript">
       PoundPayment.init({
-        payment_request_sid: "<?php echo $payment_request->sid; ?>",
-        server: "<?php echo $www_uri; ?>"
+        payment_request_sid: "<?= $payment_request->sid ?>",
+        server: "<?= $www_uri ?>"
       })
     </script>
   </body>
