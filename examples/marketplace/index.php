@@ -11,7 +11,7 @@ $data = array(
   'amount' => 20000, // in USD cents
   'payer_fee_amount' => 0,
   'payer_email_address' => 'fred@example.com',
-  'payer_phone_number' => '6505551234',
+  'payer_phone_number' => '6505551234', // Optional
   'recipient_fee_amount' => 500,
   'recipient_email_address' => 'immanuel@example.com',
   'description' => 'Beats by Dr. Dre (White)',
@@ -33,10 +33,12 @@ $payment_request = $response->response_json;
     <script type="text/javascript">
       PoundPayment.init({
         payment_request_sid: "<?= $payment_request->sid ?>",
-        cardholder_name: "Fred Nietzsche",
+        cardholder_name: "Fred Nietzsche", // Optional
         server: "<?= $CONFIG['poundpay']['www_uri'] ?>",
         success: function() {window.location = '/release.php?payment_request_sid=<?= $payment_request->sid ?>'}
       })
     </script>
+    <h2>PoundPay Response</h2>
+    <pre><?= $response->response_text ?></pre>
   </body>
 </html>
