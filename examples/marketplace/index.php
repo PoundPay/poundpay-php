@@ -2,7 +2,7 @@
 require 'config.php';
 require 'poundpay.php';
 
-$poundpay_client = new PoundPayAPIClient($CONFIG['poundpay']['sid'], 
+$poundpay_client = new PoundPayAPIClient($CONFIG['poundpay']['sid'],
                                          $CONFIG['poundpay']['auth_token'],
                                          $CONFIG['poundpay']['api_uri'],
                                          $CONFIG['poundpay']['version']);
