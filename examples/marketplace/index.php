@@ -24,7 +24,7 @@ $payment_request = $response->response_json;
 <html>
   <head>
     <title>Make Payment - Simple Marketplace</title>
-    <script type="text/javascript" src="<?= $CONFIG['poundpay']['www_uri'] ?>/js/pmp/pound_pmp.js"></script>
+    <script type="text/javascript" src="<?= $CONFIG['poundpay']['www_uri'] ?>/js/poundpay.js"></script>
   </head>
   <body>
     <h1>Make Payment</h1>

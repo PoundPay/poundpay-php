@@ -22,7 +22,7 @@
 <html>
   <head>
     <title>Simple Marketplace</title>
-    <script type="text/javascript" src="<?= $www_uri ?>/js/pmp/pound_pmp.js"></script>
+    <script type="text/javascript" src="<?= $www_uri ?>/js/poundpay.js"></script>
   </head>
   <body>
     <h1>Simple Marketplace</h1>

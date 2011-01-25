@@ -3,7 +3,7 @@
   <head>
 
   <title>Example Payment</title>
-  <script src="http://www-sandbox.poundpay.com/js/pmp/pound_pmp.js"></script>
+  <script src="http://www-sandbox.poundpay.com/js/poundpay.js"></script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
   <style>
   body {
