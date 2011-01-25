@@ -20,8 +20,10 @@
 ?>
 
 <html>
-  <title>Simple Marketplace</title>
-  <script src="<?= $www_uri ?>/js/pmp/pound_pmp.js"></script>
+  <head>
+    <title>Simple Marketplace</title>
+    <script type="text/javascript" src="<?= $www_uri ?>/js/pmp/pound_pmp.js"></script>
+  </head>
   <body>
     <h1>Simple Marketplace</h1>
     <h2><?= $payment_request->description ?></h2>

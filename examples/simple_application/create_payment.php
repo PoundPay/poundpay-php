@@ -29,4 +29,3 @@ $data = array(
 
 $response = $client->request("/payment_requests/", "POST", $data);
 echo $response->response_text;
-?>

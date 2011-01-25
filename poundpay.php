@@ -195,7 +195,7 @@ class PoundPayAPIResponse {
         $this->status_code = $status_code;
 
         if($status_code != 204) {
-            $this->response_json = @json_decode($text);
+            $this->response_json = json_decode($text);
         }
 
         $this->is_error = FALSE;
@@ -245,4 +245,3 @@ class PoundPaySignatureVerifier {
     }
 
 }
-?>

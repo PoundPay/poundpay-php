@@ -15,4 +15,3 @@ if(!$poundpay_verifier->is_authentic_response($_SERVER['HTTP_X_POUNDPAY_SIGNATUR
 }
 
 // Store the payment data locally ...
-?>

@@ -59,11 +59,10 @@ else {
 ///////////////////////////////////
 
 $response = $client->request("/payment_requests");
-if($response->is_error) {
+if ($response->is_error):
     echo "Received an error ({$response->error_name}) when listing a payment_request\n";
     echo "Error Message: {$response->error_msg}\n";
-}
-else {
+else:
     echo "Payments: \n";
 
 ?>
@@ -78,15 +77,12 @@ else {
     <table>
       <?php foreach ($p as $key => $value): ?>
       <tr>
-        <td><?php $key ?></td>
-        <td><?php $value ?></td>
+        <td><?php echo $key ?></td>
+        <td><?php echo $value ?></td>
       </tr>
       <?php endforeach; ?>
     </table>
     <?php endforeach; ?>
   </body>
 </html>
-
-<?php
-}
-?>
+<? endif; ?>
