@@ -220,7 +220,14 @@ class PoundPaySignatureVerifier {
         $this->developer_sid = $developer_sid;
     }
 
-    public function is_authentic_response($expected_signature, $url, $data = array()) {
+    public function is_authentic_response($expected_signature, $url, $post_data = array()) {
+        $data_string = $this->build_data_string($url, $post_data);
+        $calculated_signature = $this->calculate_signature($data_string);
+        return $expected_signature == $calculated_signature;
+    }
+
+    public function build_data_string($url, $data) {
+        $data_string = $url;
 
         // sort the array by keys
         ksort($data);
@@ -228,20 +235,18 @@ class PoundPaySignatureVerifier {
         // append them to the data string in order
         // with no delimiters
         foreach($data AS $key => $value) {
-            $url .= "{$key}{$value}";
+            $data_string .= "{$key}{$value}";
         }
+        return $data_string;
+    }
 
-        // This function calculates the HMAC hash of the data with the key
-        // passed in
+    public function calculate_signature($data_string) {
         // Note: hash_hmac requires PHP 5 >= 5.1.2 or PECL hash:1.1-1.5
         // Or http://pear.php.net/package/Crypt_HMAC/
-        $signature = hash_hmac("sha512", $url, $this->auth_token, TRUE);
+        $signature = hash_hmac("sha1", $data_string, $this->auth_token, true);
 
         // encode signature in base64
         $encoded_signature = base64_encode($signature);
-
-        return $encoded_signature == $expected_signature;
-
+        return $encoded_signature;
     }
-
 }

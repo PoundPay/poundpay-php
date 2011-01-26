@@ -38,7 +38,7 @@ $payment_request = $response->response_json;
         success: function() {window.location = '/release.php?payment_request_sid=<?= $payment_request->sid ?>'}
       })
     </script>
-    <h2>PoundPay Response</h2>
+    <h2>PoundPay Response for PaymentRequest</h2>
     <pre><?= $response->response_text ?></pre>
   </body>
 </html>

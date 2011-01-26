@@ -29,7 +29,7 @@ $payment = $response->response_json;
   <body>
     <h1>Release Payment</h1>
     <h2>$<?= $payment->amount / 100 ?> was released for <?= $payment->description ?></h2>
-    <h2>PoundPay Response</h2>
+    <h2>PoundPay Response for Payment</h2>
     <pre><?= $response->response_text ?></pre>
   </body>
 </html>
