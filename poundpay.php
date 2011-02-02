@@ -7,7 +7,7 @@
  * @category   APIClients
  * @package    poundpay
  * @author     PoundPay Inc.
- * @version    v1.0.2
+ * @version    v1.0.3
  * @link       http://dev.poundpay.com/
  * @requires   php-curl, json
  */
@@ -215,7 +215,7 @@ class PoundPaySignatureVerifier {
     protected $developer_sid;
     protected $auth_token;
 
-    function __construct($developer_sid, $auth_token){
+    function __construct($developer_sid, $auth_token) {
         $this->auth_token = $auth_token;
         $this->developer_sid = $developer_sid;
     }

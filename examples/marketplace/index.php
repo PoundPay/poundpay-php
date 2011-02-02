@@ -10,15 +10,14 @@ $poundpay_client = new PoundPayAPIClient($CONFIG['poundpay']['sid'],
 $data = array(
   'amount' => 20000, // in USD cents
   'payer_fee_amount' => 0,
-  'payer_email_address' => 'fred@example.com',
-  'payer_phone_number' => '6505551234', // Optional
   'recipient_fee_amount' => 500,
+  'payer_email_address' => 'fred@example.com',
   'recipient_email_address' => 'immanuel@example.com',
   'description' => 'Beats by Dr. Dre (White)',
 );
 
-$response = $poundpay_client->request('/payment_requests', 'POST', $data);
-$payment_request = $response->response_json;
+$response = $poundpay_client->request('/payment', 'POST', $data);
+$payment = $response->response_json;
 ?>
 
 <html>
@@ -28,14 +27,14 @@ $payment_request = $response->response_json;
   </head>
   <body>
     <h1>Make Payment</h1>
-    <h2><?= $payment_request->description ?></h2>
+    <h2><?= $payment->description ?></h2>
     <div id="pound-root"></div>
     <script type="text/javascript">
-      PoundPayment.init({
-        payment_request_sid: "<?= $payment_request->sid ?>",
+      PoundPay.init({
+        payment_sid: "<?= $payment->sid ?>",
         cardholder_name: "Fred Nietzsche", // Optional
         server: "<?= $CONFIG['poundpay']['www_uri'] ?>",
-        success: function() {window.location = '/release.php?payment_request_sid=<?= $payment_request->sid ?>'}
+        success: function() {window.location = '/release.php?payment_sid=<?= $payment->sid ?>'}
       })
     </script>
     <h2>PoundPay Response for PaymentRequest</h2>

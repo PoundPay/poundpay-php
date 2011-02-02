@@ -11,12 +11,13 @@
     "amount" => 20000, // in USD cents
     "payer_fee_amount" => 0,
     "recipient_fee_amount" => 500,
+    "payer_email_address" => "house@example.com",
     "recipient_email_address" => "david@example.com",
     "description" => "Beats by Dr. Dre (White)",
   );
 
-  $response = $client->request("/payment_requests/", "POST", $data);
-  $payment_request = $response->response_json;
+  $response = $client->request("/payments/", "POST", $data);
+  $payment = $response->response_json;
 ?>
 
 <html>
@@ -26,11 +27,11 @@
   </head>
   <body>
     <h1>Simple Marketplace</h1>
-    <h2><?= $payment_request->description ?></h2>
+    <h2><?= $payment->description ?></h2>
     <div id="pound-root"></div>
     <script type="text/javascript">
-      PoundPayment.init({
-        payment_request_sid: "<?= $payment_request->sid ?>",
+      PoundPay.init({
+        payment_sid: "<?= $payment->sid ?>",
         server: "<?= $www_uri ?>"
       })
     </script>
