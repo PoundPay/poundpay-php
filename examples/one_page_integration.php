@@ -29,7 +29,7 @@
     <h2><?= $payment_request->description ?></h2>
     <div id="pound-root"></div>
     <script type="text/javascript">
-      PoundPayment.init({
+      PoundPay.init({
         payment_request_sid: "<?= $payment_request->sid ?>",
         server: "<?= $www_uri ?>"
       })

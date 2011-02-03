@@ -31,7 +31,7 @@ $payment_request = $response->response_json;
     <h2><?= $payment_request->description ?></h2>
     <div id="pound-root"></div>
     <script type="text/javascript">
-      PoundPayment.init({
+      PoundPay.init({
         payment_request_sid: "<?= $payment_request->sid ?>",
         cardholder_name: "Fred Nietzsche", // Optional
         server: "<?= $CONFIG['poundpay']['www_uri'] ?>",
