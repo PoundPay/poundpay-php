@@ -16,7 +16,7 @@ $data = array(
   'description' => 'Beats by Dr. Dre (White)',
 );
 
-$response = $poundpay_client->request('/payment', 'POST', $data);
+$response = $poundpay_client->request('/payments', 'POST', $data);
 $payment = $response->response_json;
 ?>
 
@@ -32,7 +32,8 @@ $payment = $response->response_json;
     <script type="text/javascript">
       PoundPay.init({
         payment_sid: "<?= $payment->sid ?>",
-        cardholder_name: "Fred Nietzsche", // Optional
+        cardholder_name: "Fred Nietzsche",  // Optional
+        phone_number: "6505551234",  // Optional
         server: "<?= $CONFIG['poundpay']['www_uri'] ?>",
         success: function() {window.location = '/release.php?payment_sid=<?= $payment->sid ?>'}
       })
