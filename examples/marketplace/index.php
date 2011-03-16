@@ -1,44 +1,48 @@
 <?php
+function exception_handler($exception) {
+  echo "Uncaught exception: " , $exception->getMessage(), "\n";
+}
+
+set_exception_handler('exception_handler');
+
 require 'config.php';
 require 'poundpay.php';
 
-$poundpay_client = new PoundPayAPIClient($CONFIG['poundpay']['sid'],
-                                         $CONFIG['poundpay']['auth_token'],
-                                         $CONFIG['poundpay']['api_uri'],
-                                         $CONFIG['poundpay']['version']);
+PoundPay\configure($CONFIG['poundpay']['sid'],
+                   $CONFIG['poundpay']['auth_token'],
+                   $CONFIG['poundpay']['api_uri'],
+                   $CONFIG['poundpay']['version']);
 
-$data = array(
+$payment = new PoundPay\Payment(array(
   'amount' => 20000, // in USD cents
   'payer_fee_amount' => 0,
   'recipient_fee_amount' => 500,
   'payer_email_address' => 'fred@example.com',
   'recipient_email_address' => 'immanuel@example.com',
   'description' => 'Beats by Dr. Dre (White)',
-);
-
-$response = $poundpay_client->request('/payments', 'POST', $data);
-$payment = $response->response_json;
+));
+$payment->save();
 ?>
 
 <html>
   <head>
     <title>Make Payment - Simple Marketplace</title>
-    <script type="text/javascript" src="<?= $CONFIG['poundpay']['www_uri'] ?>/js/poundpay.js"></script>
+    <script type="text/javascript" src="<?php echo $CONFIG['poundpay']['www_uri'] ?>/js/poundpay.js"></script>
   </head>
   <body>
     <h1>Make Payment</h1>
-    <h2><?= $payment->description ?></h2>
+    <h2><?php echo $payment->description ?></h2>
     <div id="pound-root"></div>
     <script type="text/javascript">
       PoundPay.init({
-        payment_sid: "<?= $payment->sid ?>",
+        payment_sid: "<?php echo $payment->sid ?>",
         cardholder_name: "Fred Nietzsche",  // Optional
         phone_number: "6505551234",  // Optional
-        server: "<?= $CONFIG['poundpay']['www_uri'] ?>",
-        success: function() {window.location = '/release.php?payment_sid=<?= $payment->sid ?>'}
+        server: "<?php echo $CONFIG['poundpay']['www_uri'] ?>",
+        success: function() {window.location = '/release.php?payment_sid=<?php echo $payment->sid ?>'}
       })
     </script>
     <h2>PoundPay Response for PaymentRequest</h2>
-    <pre><?= $response->response_text ?></pre>
+    <pre><?php echo PoundPay\getLastResponse()->response_text ?></pre>
   </body>
 </html>

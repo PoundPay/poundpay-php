@@ -11,7 +11,7 @@
  * @link       http://dev.poundpay.com/
  * @requires   php-curl, json
  */
-
+namespace PoundPay;
 
 // does curl extension exist?
 if( !extension_loaded("curl") ) {
@@ -25,6 +25,84 @@ if( !extension_loaded("json") ) {
     throw(new Exception($error_msg));
 }
 
+function configure($developer_sid,
+                   $auth_token,
+                   $api_uri="https://api.poundpay.com",
+                   $version='silver') {
+    Resource::$_client = new PoundPayAPIClient($developer_sid, $auth_token, $api_uri, $version);
+}
+
+function getLastResponse() {
+    return Resource::$_client->getLastResponse();
+}
+
+class Resource {
+    /** @var PoundPayAPIClient set by PoundPay\configure() **/
+    public static $_client; //
+    /** @var string must be set by subclass **/
+    protected static $_name;
+
+    public function __construct($vars) {
+        $this->setVars($vars);
+    }
+
+    public function setVars($vars) {
+        foreach ($vars as $key => $val) {
+            $this->$key = $val;
+        }
+    }
+
+    public static function all() {
+        $resp = self::$_client->get(static::$_name);
+        $resources = array();
+        foreach ($resp->response_json->{static::$_name} as $vars) {
+            $resources[] = new static($vars);
+        }
+        return $resources;
+    }
+
+    public static function find($sid) {
+        $resp = self::$_client->get(self::getPath($sid));
+        return new static($resp->response_json);
+    }
+
+    public function save() {
+        if (isset($this->sid)) {
+            $vars = self::update($this->sid, get_object_vars($this));
+        } else {
+            $vars = self::create(get_object_vars($this));
+        }
+        $this->setVars($vars);
+        return $this;
+    }
+
+    public function delete($sid) {
+        self::$_client->delete(self::getPath($sid));
+    }
+
+    protected static function update($sid, $vars) {
+        $resp = self::$_client->put(self::getPath($sid), $vars);
+        return $resp->response_json;
+    }
+
+    protected static function create($vars) {
+        $resp = self::$_client->post(static::$_name, $vars);
+        return $resp->response_json;
+    }
+
+    protected static function getPath($sid) {
+        return static::$_name . '/' . $sid;
+    }
+}
+
+class Developer extends Resource {
+    protected static $_name = "developers";
+}
+
+class Payment extends Resource {
+    protected static $_name = "payments";
+}
+
 
 /*
  * PoundPayAPIClient throws PoundPayAPIException on any errors
@@ -32,7 +110,7 @@ if( !extension_loaded("json") ) {
  * Catch this exception when making a request
  *
  */
-class PoundPayAPIException extends Exception {}
+class PoundPayAPIException extends \Exception {}
 
 
 /*
@@ -51,6 +129,7 @@ class PoundPayAPIClient {
     protected $auth_token;
     protected $api_uri;
     protected $version;
+    protected $last_response;
 
     /*
      * __construct
@@ -70,6 +149,26 @@ class PoundPayAPIClient {
         $this->version = $version;
     }
 
+    public function get($endpoint) {
+        return $this->request($endpoint, 'GET');
+    }
+
+    public function post($endpoint, $vars) {
+        return $this->request($endpoint, 'POST', $vars);
+    }
+
+    public function put($endpoint, $vars) {
+        return $this->request($endpoint, 'PUT', $vars);
+    }
+
+    public function delete($endpoint) {
+        return $this->request($endpoint, 'DELETE');
+    }
+
+    public function getLastResponse() {
+        return $this->last_response;
+    }
+
     /*
      * request()
      *   Sends an HTTP Request to the PoundPay API
@@ -78,7 +177,7 @@ class PoundPayAPIClient {
      *   $vars : for POST or PUT, a key/value associative array of data to
      *           send, for GET will be appended to the URL as query params
      */
-    public function request($endpoint, $method="GET", $vars=array()) {
+    public function request($endpoint, $method='GET', $vars=array()) {
         $fp = null;
         $tmpfile = "";
         $encoded = "";
@@ -91,7 +190,7 @@ class PoundPayAPIClient {
 
         // construct full url
         $endpoint = rtrim($endpoint, "/");  // ensure that they're one slash at the end
-        $url = "{$this->api_uri}/{$this->version}{$endpoint}/";
+        $url = "{$this->api_uri}/{$this->version}/{$endpoint}/";
 
         // if GET and vars, append them
         if($method == "GET") {
@@ -100,7 +199,6 @@ class PoundPayAPIClient {
             // append post ?
             $url .= (FALSE === strpos($path, '?') ? "?" : "&") . $encoded;
         }
-
         // initialize a new curl object
         $curl = curl_init($url);
 
@@ -142,6 +240,7 @@ class PoundPayAPIClient {
 
         // send credentials
         curl_setopt($curl, CURLOPT_USERPWD, $pwd = "{$this->developer_sid}:{$this->auth_token}");
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 
         // do the request. If FALSE, then an exception occurred
         if(FALSE === ($result = curl_exec($curl))) {
@@ -159,7 +258,8 @@ class PoundPayAPIClient {
             unlink($tmpfile);
         }
 
-        return new PoundPayAPIResponse($url, $result, $response_code);
+        $this->last_response = new PoundPayAPIResponse($url, $result, $response_code);
+        return $this->last_response;
     }
 }
 
@@ -204,9 +304,7 @@ class PoundPayAPIResponse {
             $this->error_name = $this->response_json['error_name'];
             $this->error_msg = $this->response_json['error_message'];
         }
-
     }
-
 }
 
 
