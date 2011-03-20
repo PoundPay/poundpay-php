@@ -38,7 +38,7 @@ function getLastResponse() {
 
 class Resource {
     /** @var PoundPayAPIClient set by PoundPay\configure() **/
-    public static $_client; //
+    public static $_client;
     /** @var string must be set by subclass **/
     protected static $_name;
 
