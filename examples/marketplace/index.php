@@ -1,7 +1,7 @@
 <?php
 
 require 'config.php';
-require 'poundpay.php';
+require dirname(__FILE__).'/../../poundpay.php';
 
 PoundPay\configure($CONFIG['poundpay']['sid'],
                    $CONFIG['poundpay']['auth_token'],
@@ -38,6 +38,6 @@ $payment->save();
       })
     </script>
     <h2>PoundPay Response for PaymentRequest</h2>
-    <pre><?php echo PoundPay\getLastResponse()->response_text ?></pre>
+    <pre><?php echo PoundPay\getLastResponse()->body ?></pre>
   </body>
 </html>

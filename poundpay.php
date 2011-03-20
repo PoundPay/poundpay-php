@@ -13,23 +13,21 @@
  */
 namespace PoundPay;
 
-// does curl extension exist?
 if( !extension_loaded("curl") ) {
-    $error_msg = "Curl extension is required for PoundPayAPIClient to work";
-    throw(new Exception($error_msg));
+    $error_msg = "Curl extension is required for PoundPay client library";
+    throw(new \Exception($error_msg));
 }
 
-// does the json extension exist?
 if( !extension_loaded("json") ) {
-    $error_msg = "JSON extension is required for PoundPayAPIClient to work";
-    throw(new Exception($error_msg));
+    $error_msg = "JSON extension is required for PoundPay client library";
+    throw(new \Exception($error_msg));
 }
 
 function configure($developer_sid,
                    $auth_token,
                    $api_uri="https://api.poundpay.com",
                    $version='silver') {
-    Resource::$_client = new PoundPayAPIClient($developer_sid, $auth_token, $api_uri, $version);
+    Resource::$_client = new APIClient($developer_sid, $auth_token, $api_uri, $version);
 }
 
 function getLastResponse() {
@@ -37,7 +35,7 @@ function getLastResponse() {
 }
 
 class Resource {
-    /** @var PoundPayAPIClient set by PoundPay\configure() **/
+    /** @var APIClient set by PoundPay\configure() **/
     public static $_client;
     /** @var string must be set by subclass **/
     protected static $_name;
@@ -55,7 +53,7 @@ class Resource {
     public static function all() {
         $resp = self::$_client->get(static::$_name);
         $resources = array();
-        foreach ($resp->response_json->{static::$_name} as $vars) {
+        foreach ($resp->json->{static::$_name} as $vars) {
             $resources[] = new static($vars);
         }
         return $resources;
@@ -63,7 +61,7 @@ class Resource {
 
     public static function find($sid) {
         $resp = self::$_client->get(self::getPath($sid));
-        return new static($resp->response_json);
+        return new static($resp->json);
     }
 
     public function save() {
@@ -82,12 +80,12 @@ class Resource {
 
     protected static function update($sid, $vars) {
         $resp = self::$_client->put(self::getPath($sid), $vars);
-        return $resp->response_json;
+        return $resp->json;
     }
 
     protected static function create($vars) {
         $resp = self::$_client->post(static::$_name, $vars);
-        return $resp->response_json;
+        return $resp->json;
     }
 
     protected static function getPath($sid) {
@@ -105,25 +103,32 @@ class Payment extends Resource {
 
 
 /*
- * PoundPayAPIClient throws PoundPayAPIException on any errors
- * encountered during a REST request.
- * Catch this exception when making a request
- *
+ * Base exception class for PoundPay errors.
  */
-class PoundPayAPIException extends \Exception {}
-
+class Exception extends \Exception {}
 
 /*
- * PoundPayAPIClient: the core API client, talks to the PoundPay REST API.
- * @return
- *   Returns a PoundPayAPIResponse object for all responses if PoundPay's
- *   API was reachable.
- * @throws
- *   Throws a PoundPayAPIException if PoundPay's API was unreachable
- *
+ * Class for errors returned from the PoundPay API.
  */
+class APIException extends Exception {
+    /** @var APIResponse **/
+    public $api_response;
 
-class PoundPayAPIClient {
+    /** @param APIResponse $api_response **/
+    public function __construct($api_response) {
+        $this->api_response = $api_response;
+        $exceptionMessage = "PoundPay API error: http code: $api_response->status_code, message: $api_response->error_msg, url: $api_response->url";
+        parent::__construct($exceptionMessage, $api_response->status_code);
+    }
+}
+
+/*
+ * APIClient: the core API client, talks to the PoundPay REST API.
+ * @return APIResponse for all responses if PoundPay's API was reachable.
+ * @throws APIException for error responses from the API
+ * @throws Exception for all other errors
+ */
+class APIClient {
 
     protected $developer_sid;
     protected $auth_token;
@@ -197,7 +202,7 @@ class PoundPayAPIClient {
             // checks to see if the path already has encoded attributes
             // then just append the encoded string using & if it does or
             // append post ?
-            $url .= (FALSE === strpos($path, '?') ? "?" : "&") . $encoded;
+            $url .= (FALSE === strpos($url, '?') ? "?" : "&") . $encoded;
         }
         // initialize a new curl object
         $curl = curl_init($url);
@@ -233,7 +238,7 @@ class PoundPayAPIClient {
                break;
 
            default:
-               throw(new PoundPayAPIException("Unknown method $method"));
+               throw(new Exception("Unknown method $method"));
                break;
 
         }
@@ -244,7 +249,7 @@ class PoundPayAPIClient {
 
         // do the request. If FALSE, then an exception occurred
         if(FALSE === ($result = curl_exec($curl))) {
-            throw(new PoundPayAPIException("Curl failed with error " . curl_error($curl)));
+            throw(new Exception("Curl failed with error: " . curl_error($curl)));
         }
 
         // get result code
@@ -258,25 +263,27 @@ class PoundPayAPIClient {
             unlink($tmpfile);
         }
 
-        $this->last_response = new PoundPayAPIResponse($url, $result, $response_code);
-        return $this->last_response;
+        $response = $this->last_response = new APIResponse($url, $result, $response_code);
+        if ($response->is_error) {
+            throw new APIException($response);
+        }
+
+        return $response;
     }
 }
 
 
 /*
- * PoundPayAPIResponse holds all the resource response data
- * Before using the reponse, check $is_error to see if an exception
- * occurred with the data sent to PoundPay.
- * $response_json will contain a decoded json response object
- * $response_text contains the raw string response
+ * APIResponse holds all the resource response data
+ * $json will contain a decoded json response object
+ * $body contains the raw string response
  * $url and $query_string are from the original HTTP request
  * $status_code is the response code of the request
  */
-class PoundPayAPIResponse {
+class APIResponse {
 
-    public $response_text;
-    public $response_json;
+    public $body;
+    public $json;
     public $status_code;
     public $url;
     public $query_string;
@@ -291,24 +298,24 @@ class PoundPayAPIResponse {
         if(array_key_exists("query", $parsed_url)){
             $this->query_string = $parsed_url["query"];
         }
-        $this->response_text = $text;
+        $this->body = $text;
         $this->status_code = $status_code;
 
         if($status_code != 204) {
-            $this->response_json = json_decode($text);
+            $this->json = json_decode($text);
         }
 
         $this->is_error = FALSE;
         if($this->error_msg = ($status_code >= 400)) {
             $this->is_error = TRUE;
-            $this->error_name = $this->response_json['error_name'];
-            $this->error_msg = $this->response_json['error_message'];
+            $this->error_name = $this->json['error_name'];
+            $this->error_msg = $this->json['error_message'];
         }
     }
 }
 
 
-class PoundPaySignatureVerifier {
+class SignatureVerifier {
 
     protected $developer_sid;
     protected $auth_token;
