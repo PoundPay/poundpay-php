@@ -1,7 +1,7 @@
 <?php
 
 require 'config.php';
-require dirname(__FILE__).'/../../poundpay.php';
+require dirname(__FILE__) . '/../../PoundPay.php';
 
 PoundPay\configure(
     $CONFIG['poundpay']['sid'],

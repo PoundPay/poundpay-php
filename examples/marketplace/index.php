@@ -1,7 +1,7 @@
 <?php
 
 require 'config.php';
-require dirname(__FILE__).'/../../poundpay.php';
+require dirname(__FILE__) . '/../../PoundPay.php';
 
 PoundPay\configure($CONFIG['poundpay']['sid'],
                    $CONFIG['poundpay']['auth_token'],
@@ -9,12 +9,12 @@ PoundPay\configure($CONFIG['poundpay']['sid'],
                    $CONFIG['poundpay']['version']);
 
 $payment = new PoundPay\Payment(array(
-  'amount' => 20000, // in USD cents
-  'payer_fee_amount' => 0,
-  'recipient_fee_amount' => 500,
-  'payer_email_address' => 'fred@example.com',
-  'recipient_email_address' => 'immanuel@example.com',
-  'description' => 'Beats by Dr. Dre (White)',
+    'amount' => 20000, // in USD cents
+    'payer_fee_amount' => 0,
+    'recipient_fee_amount' => 500,
+    'payer_email_address' => 'fred@example.com',
+    'recipient_email_address' => 'immanuel@example.com',
+    'description' => 'Beats by Dr. Dre (White)',
 ));
 $payment->save();
 ?>

@@ -1,5 +1,5 @@
 <?php
-  require "poundpay.php";
+  require "PoundPay.php";
 
   $account_sid = 'DVxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
   $auth_token = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';

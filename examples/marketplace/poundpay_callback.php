@@ -6,7 +6,7 @@ This URL has to be configured with PoundPay
 */
 
 require 'config.php';
-require 'poundpay.php';
+require 'PoundPay.php';
 
 // Verify request is from PoundPay; otherwise, 404
 $poundpay_verifier = new PoundPaySignatureVerifier($CONFIG['poundpay']['sid'], $CONFIG['poundpay']['auth_token']);
