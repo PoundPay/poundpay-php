@@ -26,6 +26,6 @@ $payment->save();
     <h1>Release Payment</h1>
     <h2>$<?= $payment->amount / 100 ?> was released for <?= $payment->description ?></h2>
     <h2>PoundPay Response for Payment</h2>
-    <pre><?= PoundPay\getLastResponse()->body ?></pre>
+    <pre><?= PoundPay\get_last_response()->body ?></pre>
   </body>
 </html>

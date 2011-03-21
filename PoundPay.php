@@ -23,6 +23,7 @@ if( !extension_loaded("json") ) {
     throw(new \Exception($error_msg));
 }
 
+
 function configure($developer_sid,
                    $auth_token,
                    $api_uri="https://api.poundpay.com",
@@ -30,8 +31,8 @@ function configure($developer_sid,
     Resource::$_client = new APIClient($developer_sid, $auth_token, $api_uri, $version);
 }
 
-function getLastResponse() {
-    return Resource::$_client->getLastResponse();
+function get_last_response() {
+    return Resource::$_client->get_last_response();
 }
 
 class Resource {
@@ -134,6 +135,9 @@ class APIClient {
     protected $auth_token;
     protected $api_uri;
     protected $version;
+
+    protected $curl_handle;
+    /** @var APIResponse the response from the last api call */
     protected $last_response;
 
     /*
@@ -170,8 +174,36 @@ class APIClient {
         return $this->request($endpoint, 'DELETE');
     }
 
-    public function getLastResponse() {
+    public function get_last_response() {
         return $this->last_response;
+    }
+
+    /** curl wrapper for mocking purposes **/
+    protected function curl_init($url) {
+        $this->curl_handle = curl_init($url);
+    }
+
+    /** curl wrapper for mocking purposes **/
+    protected function curl_setopt($option, $value) {
+        return curl_setopt($this->curl_handle, $option, $value);
+    }
+
+    /** curl wrapper for mocking purposes **/
+    protected function curl_exec() {
+        return curl_exec($this->curl_handle);
+    }
+
+    /** curl wrapper for mocking purposes **/
+    protected function curl_getinfo($opt = 0) {
+        return curl_getinfo($this->curl_handle, $opt);
+    }
+
+    protected function curl_error() {
+        return curl_error($this->curl_handle);
+    }
+
+    protected function curl_close() {
+        return curl_close($this->curl_handle);
     }
 
     /*
@@ -205,36 +237,36 @@ class APIClient {
             $url .= (FALSE === strpos($url, '?') ? "?" : "&") . $encoded;
         }
         // initialize a new curl object
-        $curl = curl_init($url);
+        $this->curl_init($url);
 
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+        $this->curl_setopt(CURLOPT_RETURNTRANSFER, TRUE);
 
         switch(strtoupper($method)) {
 
            case "GET":
-               curl_setopt($curl, CURLOPT_HTTPGET, TRUE);
+               $this->curl_setopt(CURLOPT_HTTPGET, TRUE);
                break;
 
            case "POST":
-               curl_setopt($curl, CURLOPT_POST, TRUE);
-               curl_setopt($curl, CURLOPT_POSTFIELDS, $encoded);
+               $this->curl_setopt(CURLOPT_POST, TRUE);
+               $this->curl_setopt(CURLOPT_POSTFIELDS, $encoded);
                break;
 
            case "PUT":
                $tmpfile = tempnam("/tmp", "put_");
                $fp = fopen($tmpfile, 'r');
 
-               curl_setopt($curl, CURLOPT_POSTFIELDS, $encoded);
-               curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+               $this->curl_setopt(CURLOPT_POSTFIELDS, $encoded);
+               $this->curl_setopt(CURLOPT_CUSTOMREQUEST, "PUT");
 
                file_put_contents($tmpfile, $encoded);
 
-               curl_setopt($curl, CURLOPT_INFILE, $fp);
-               curl_setopt($curl, CURLOPT_INFILESIZE, filesize($tmpfile));
+               $this->curl_setopt(CURLOPT_INFILE, $fp);
+               $this->curl_setopt(CURLOPT_INFILESIZE, filesize($tmpfile));
                break;
 
            case "DELETE":
-               curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+               $this->curl_setopt(CURLOPT_CUSTOMREQUEST, "DELETE");
                break;
 
            default:
@@ -244,16 +276,16 @@ class APIClient {
         }
 
         // send credentials
-        curl_setopt($curl, CURLOPT_USERPWD, $pwd = "{$this->developer_sid}:{$this->auth_token}");
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        $this->curl_setopt(CURLOPT_USERPWD, $pwd = "{$this->developer_sid}:{$this->auth_token}");
+        $this->curl_setopt(CURLOPT_SSL_VERIFYPEER, false);
 
         // do the request. If FALSE, then an exception occurred
-        if(FALSE === ($result = curl_exec($curl))) {
-            throw(new Exception("Curl failed with error: " . curl_error($curl)));
+        if(FALSE === ($result = $this->curl_exec())) {
+            throw(new Exception("Curl failed with error: " . $this->curl_error()));
         }
 
         // get result code
-        $response_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $response_code = $this->curl_getinfo(CURLINFO_HTTP_CODE);
 
         // unlink tmpfiles and clean up
         if($fp) {
@@ -263,6 +295,8 @@ class APIClient {
             unlink($tmpfile);
         }
 
+        $this->curl_close();
+
         $response = $this->last_response = new APIResponse($url, $result, $response_code);
         if ($response->is_error) {
             throw new APIException($response);
@@ -271,7 +305,6 @@ class APIClient {
         return $response;
     }
 }
-
 
 /*
  * APIResponse holds all the resource response data
