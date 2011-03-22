@@ -225,13 +225,7 @@ class APIClient {
     public function request($endpoint, $method='GET', $vars=array()) {
         $fp = null;
         $tmpfile = "";
-        $encoded = "";
-
-        foreach($vars AS $key => $value) {
-            $encoded .= "$key=" . urlencode($value) . "&";
-        }
-
-        $encoded = rtrim($encoded, "&");
+        $encoded = http_build_query($vars);
 
         // construct full url
         $endpoint = rtrim($endpoint, "/");  // ensure that they're one slash at the end
