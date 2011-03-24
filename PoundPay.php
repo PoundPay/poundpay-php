@@ -335,7 +335,7 @@ class APIResponse {
         $this->status_code = $status_code;
 
         if($status_code != 204) {
-            $this->json = json_decode($text);
+            $this->json = json_decode($text, true);
         }
 
         $this->is_error = FALSE;
