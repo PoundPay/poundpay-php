@@ -28,16 +28,16 @@ function configure($developer_sid,
                    $auth_token,
                    $api_uri="https://api.poundpay.com",
                    $version='silver') {
-    Resource::$_client = new APIClient($developer_sid, $auth_token, $api_uri, $version);
+    Resource::setClient(new APIClient($developer_sid, $auth_token, $api_uri, $version));
 }
 
 function get_last_response() {
-    return Resource::$_client->get_last_response();
+    return Resource::getClient()->get_last_response();
 }
 
 class Resource {
     /** @var APIClient set by PoundPay\configure() **/
-    public static $_client;
+    protected static $_client;
     /** @var string must be set by subclass **/
     protected static $_name;
 
@@ -54,7 +54,7 @@ class Resource {
     public static function all() {
         $resp = self::$_client->get(static::$_name);
         $resources = array();
-        foreach ($resp->json->{static::$_name} as $vars) {
+        foreach ($resp->json[static::$_name] as $vars) {
             $resources[] = new static($vars);
         }
         return $resources;
@@ -91,6 +91,14 @@ class Resource {
 
     protected static function getPath($sid) {
         return static::$_name . '/' . $sid;
+    }
+
+    public static function setClient($client) {
+        self::$_client = $client;
+    }
+
+    public static function getClient() {
+        return self::$_client;
     }
 }
 
