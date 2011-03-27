@@ -305,7 +305,7 @@ class APIClient {
 
         $this->curl_close();
 
-        $response = $this->last_response = new APIResponse($url, $result, $response_code);
+        $response = $this->last_response = new APIResponse($result, $response_code);
         if ($response->is_error) {
             throw new APIException($response);
         }
@@ -318,7 +318,6 @@ class APIClient {
  * APIResponse holds all the resource response data
  * $json will contain a decoded json response object
  * $body contains the raw string response
- * $url and $query_string are from the original HTTP request
  * $status_code is the response code of the request
  */
 class APIResponse {
@@ -326,24 +325,16 @@ class APIResponse {
     public $body;
     public $json;
     public $status_code;
-    public $url;
-    public $query_string;
     public $is_error;
     public $error_name;
     public $error_msg;
 
-    public function __construct($url, $text, $status_code) {
-        $parsed_url = parse_url($url);
-        $this->url = $parsed_url["scheme"] . "//" . $parsed_url["host"];
-        $this->query_string = null;
-        if(array_key_exists("query", $parsed_url)){
-            $this->query_string = $parsed_url["query"];
-        }
-        $this->body = $text;
+    public function __construct($body, $status_code) {
+        $this->body = $body;
         $this->status_code = $status_code;
 
         if($status_code != 204) {
-            $this->json = json_decode($text, true);
+            $this->json = json_decode($body, true);
         }
 
         $this->is_error = FALSE;

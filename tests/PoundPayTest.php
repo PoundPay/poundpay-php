@@ -34,7 +34,7 @@ class ResourceTest extends PoundPayTest {
     }
 
     protected function makeApiResponse($data, $status_code = 200) {
-        return new PoundPay\APIResponse($this->config['api_url'], json_encode($data), $status_code);
+        return new PoundPay\APIResponse(json_encode($data), $status_code);
     }
 
     /** @dataProvider resourceProvider */
