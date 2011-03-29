@@ -34,7 +34,8 @@ $payment->save();
         cardholder_name: "Fred Nietzsche",  // Optional
         phone_number: "6505551234",  // Optional
         server: "<?php echo $CONFIG['poundpay']['www_uri'] ?>",
-        success: function() {window.location = '/release.php?payment_sid=<?php echo $payment->sid ?>'}
+        success: function() {window.location = '/release.php?payment_sid=<?php echo $payment->sid ?>'},
+        error: function() {alert('Oops! An error occurred processing the request.')}
       })
     </script>
     <h2>PoundPay Response for PaymentRequest</h2>
