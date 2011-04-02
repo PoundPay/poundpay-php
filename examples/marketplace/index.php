@@ -1,9 +1,9 @@
 <?php
 
 require 'config.php';
-require dirname(__FILE__) . '/../../PoundPay.php';
+require 'PoundPay/Autoload.php';
 
-PoundPay\configure($CONFIG['poundpay']['sid'],
+PoundPay\Core::configure($CONFIG['poundpay']['sid'],
                    $CONFIG['poundpay']['auth_token'],
                    $CONFIG['poundpay']['api_uri'],
                    $CONFIG['poundpay']['version']);
@@ -39,6 +39,6 @@ $payment->save();
       })
     </script>
     <h2>PoundPay Response for PaymentRequest</h2>
-    <pre><?php echo PoundPay\get_last_response()->http_response->getBody() ?></pre>
+    <pre><?php echo PoundPay\Core::get_last_response()->http_response->getBody() ?></pre>
   </body>
 </html>

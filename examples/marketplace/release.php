@@ -1,9 +1,9 @@
 <?php
 
 require 'config.php';
-require dirname(__FILE__) . '/../../PoundPay.php';
+require 'PoundPay/Autoload.php';
 
-PoundPay\configure(
+PoundPay\Core::configure(
     $CONFIG['poundpay']['sid'],
     $CONFIG['poundpay']['auth_token'],
     $CONFIG['poundpay']['api_uri'],
@@ -26,6 +26,6 @@ $payment->save();
     <h1>Release Payment</h1>
     <h2>$<?= $payment->amount / 100 ?> was released for <?= $payment->description ?></h2>
     <h2>PoundPay Response for Payment</h2>
-    <pre><?= PoundPay\get_last_response()->http_response->getBody() ?></pre>
+    <pre><?= PoundPay\Core::get_last_response()->http_response->getBody() ?></pre>
   </body>
 </html>

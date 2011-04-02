@@ -1,6 +1,6 @@
 <?php
 namespace PoundPay;
-require_once dirname(__FILE__) . '/TestCase.php';
+require_once __DIR__ . '/TestCase.php';
 require_once 'Zend/Http/Client/Adapter/Interface.php';
 
 class APIClientTest extends TestCase {

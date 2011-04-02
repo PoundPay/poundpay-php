@@ -6,10 +6,10 @@ This URL has to be configured with PoundPay
 */
 
 require 'config.php';
-require 'PoundPay.php';
+require 'PoundPay/Autoload.php';
 
 // Verify request is from PoundPay; otherwise, 404
-$poundpay_verifier = new PoundPaySignatureVerifier($CONFIG['poundpay']['sid'], $CONFIG['poundpay']['auth_token']);
+$poundpay_verifier = new PoundPay\SignatureVerifier($CONFIG['poundpay']['sid'], $CONFIG['poundpay']['auth_token']);
 if(!$poundpay_verifier->is_authentic_response($_SERVER['HTTP_X_POUNDPAY_SIGNATURE'], $CONFIG['poundpay']['callback_url'], $_POST)) {
   header("HTTP/1.1 404 Not Found");
   exit();

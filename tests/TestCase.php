@@ -1,6 +1,6 @@
 <?php
 namespace PoundPay;
-require_once dirname(__FILE__) . '/../PoundPay.php';
+require_once 'PoundPay/Autoload.php';
 require_once 'PHPUnit/Autoload.php';
 
 class TestCase extends \PHPUnit_Framework_TestCase {
