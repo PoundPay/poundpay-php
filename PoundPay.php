@@ -22,8 +22,8 @@ if( !extension_loaded("json") ) {
 
 function configure($developer_sid,
                    $auth_token,
-                   $api_uri="https://api.poundpay.com",
-                   $version='silver') {
+                   $api_uri = "https://api.poundpay.com",
+                   $version = 'silver') {
     Resource::setClient(new APIClient($developer_sid, $auth_token, $api_uri, $version));
 }
 
@@ -130,6 +130,7 @@ class APIException extends Exception {
 
 /*
  * APIClient: the core API client, talks to the PoundPay REST API.
+ *
  * @return APIResponse for all responses if PoundPay's API was reachable.
  * @throws APIException for error responses from the API
  * @throws Exception for all other errors
@@ -144,17 +145,16 @@ class APIClient {
     /** @var APIResponse the response from the last api call */
     protected $last_response;
 
-    /*
-     * __construct
-     *   $developer_sid : Your Developer SID
-     *   $auth_token : Your account's auth_token
-     *   $api_uri : The PoundPay REST Service URI, defaults to https://api.poundpay.com
-     *   $version : The PoundPay API version
+    /**
+     * @param string $developer_sid Your Developer SID
+     * @param string $auth_token Your account's auth_token
+     * @param string $api_uri The PoundPay REST Service URI, defaults to https://api.poundpay.com
+     * @param string $version The PoundPay API version
      */
     public function __construct($developer_sid,
                                 $auth_token,
-                                $api_uri="https://api.poundpay.com",
-                                $version='silver') {
+                                $api_uri = "https://api.poundpay.com",
+                                $version = 'silver') {
 
         $this->developer_sid = $developer_sid;
         $this->auth_token = $auth_token;
@@ -182,45 +182,41 @@ class APIClient {
         return $this->last_response;
     }
 
-    /*
-     * request()
-     *   Sends an HTTP Request to the PoundPay API
-     *   $endpoint : the URL (relative to the endpoint URL, after the /{version})
-     *   $method : the HTTP method to use, defaults to GET
-     *   $vars : for POST or PUT, a key/value associative array of data to
-     *           send, for GET will be appended to the URL as query params
+    /**
+     * Sends an HTTP Request to the PoundPay API
+     *
+     * @param string $endpoint The URL (relative to the endpoint URL, after the /{version})
+     * @param string $method The HTTP method to use, defaults to GET
+     * @param array $vars For POST or PUT, a key/value associative array of data to
+     *                    send, for GET will be appended to the URL as query params
      */
-    public function request($endpoint, $method='GET', $vars=array()) {
-        $encoded = http_build_query($vars);
-
+    public function request($endpoint, $method = 'GET', $vars = array()) {
         // construct full url
-        $endpoint = rtrim($endpoint, "/");  // ensure that they're one slash at the end
+        $endpoint = rtrim($endpoint, "/"); // normalize - slash added below
         $url = "{$this->api_uri}/{$this->version}/{$endpoint}/";
-        $method = strtoupper($method);
 
         $client = new \Zend_Http_Client($url);
+        $client->setAuth($this->developer_sid, $this->auth_token);
 
+        $method = strtoupper($method);
         switch($method) {
             case "GET":
-                // append query vars
-                $url .= (FALSE === strpos($url, '?') ? "?" : "&") . $encoded;
-                $client->setUri($url);
+                $client->setParameterGet($vars);
                 break;
 
             case "POST":
             case "PUT":
-                $client->setRawData($encoded, \Zend_Http_Client::ENC_URLENCODED);
+                $client->setParameterPost($vars);
                 break;
 
            case "DELETE":
                break;
 
            default:
-               throw(new Exception("Unknown method $method"));
+               throw(new Exception("Unsupported method $method"));
                break;
         }
 
-        $client->setAuth($this->developer_sid, $this->auth_token);
         $httpResponse = $client->request($method);
 
         $response = $this->last_response = new APIResponse($httpResponse);
@@ -232,18 +228,20 @@ class APIClient {
     }
 }
 
-/*
- * APIResponse holds all the resource response data
- * $json will contain a decoded json response object
- * $body contains the raw string response
- * $status_code is the response code of the request
+/**
+ * Contains the parsed data from a PoundPay API response.
  */
 class APIResponse {
 
+    /** @var array The decoded json response */
     public $json;
+    /** @var bool Whether the response indicates an error condition */
     public $is_error;
+    /** @var string The name of the error if $is_error is true */
     public $error_name;
+    /** @var string The error message if $is_error is true */
     public $error_msg;
+    /** @var \Zend_Http_Response The lower level HTTP response object */
     public $http_response;
 
     public function __construct(\Zend_Http_Response $http_response) {
