@@ -137,13 +137,12 @@ class APIException extends Exception {
  */
 class APIClient {
 
-    protected $developer_sid;
-    protected $auth_token;
-    protected $api_uri;
-    protected $version;
+    protected $base_uri;
 
     /** @var APIResponse the response from the last api call */
     protected $last_response;
+    /** @var \Zend_Http_Client */
+    protected $client;
 
     /**
      * @param string $developer_sid Your Developer SID
@@ -156,10 +155,9 @@ class APIClient {
                                 $api_uri = "https://api.poundpay.com",
                                 $version = 'silver') {
 
-        $this->developer_sid = $developer_sid;
-        $this->auth_token = $auth_token;
-        $this->api_uri = $api_uri;
-        $this->version = $version;
+        $this->client = new \Zend_Http_Client();
+        $this->client->setAuth($developer_sid, $auth_token);
+        $this->base_uri = "$api_uri/$version/";
     }
 
     public function get($endpoint) {
@@ -167,11 +165,14 @@ class APIClient {
     }
 
     public function post($endpoint, $vars) {
-        return $this->request($endpoint, 'POST', $vars);
+        $this->client->setParameterPost($vars);
+        return $this->request($endpoint, 'POST');
     }
 
     public function put($endpoint, $vars) {
-        return $this->request($endpoint, 'PUT', $vars);
+        $this->client->setEncType(\Zend_Http_Client::ENC_URLENCODED);
+        $this->client->setParameterPost($vars);
+        return $this->request($endpoint, 'PUT');
     }
 
     public function delete($endpoint) {
@@ -183,45 +184,27 @@ class APIClient {
     }
 
     /**
-     * Sends an HTTP Request to the PoundPay API
-     *
-     * @param string $endpoint The URL (relative to the endpoint URL, after the /{version})
-     * @param string $method The HTTP method to use, defaults to GET
-     * @param array $vars For POST or PUT, a key/value associative array of data to
-     *                    send, for GET will be appended to the URL as query params
+     * @param Zend_Http_Client_Adapter_Interface|string $adapter
      */
-    public function request($endpoint, $method = 'GET', $vars = array()) {
-        // construct full url
-        $endpoint = rtrim($endpoint, "/"); // normalize - slash added below
-        $url = "{$this->api_uri}/{$this->version}/{$endpoint}/";
+    public function setAdapter($adapter) {
+        $this->client->setAdapter($adapter);
+    }
 
-        $client = new \Zend_Http_Client($url);
-        $client->setAuth($this->developer_sid, $this->auth_token);
-
-        $method = strtoupper($method);
-        switch($method) {
-            case "GET":
-                $client->setParameterGet($vars);
-                break;
-
-            case "POST":
-            case "PUT":
-                $client->setParameterPost($vars);
-                break;
-
-           case "DELETE":
-               break;
-
-           default:
-               throw(new Exception("Unsupported method $method"));
-               break;
-        }
-
-        $httpResponse = $client->request($method);
+    /**
+     * Sends an HTTP Request to the PoundPay API. GET/POST/PUT parameters must already
+     * be set.
+     *
+     * @param string $endpoint The URL (relative to the base URL, after the /{version})
+     * @param string $method The HTTP method to use, defaults to GET
+     */
+    protected function request($endpoint, $method) {
+        $this->client->setUri($this->base_uri . $endpoint);
+        
+        $httpResponse = $this->client->request($method);
 
         $response = $this->last_response = new APIResponse($httpResponse);
         if ($response->is_error) {
-            throw new APIException($response, $url);
+            throw new APIException($response, $this->client->getUri(true));
         }
 
         return $response;
