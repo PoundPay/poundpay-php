@@ -9,11 +9,11 @@
  * @author     PoundPay Inc.
  * @version    v1.0.3
  * @link       http://dev.poundpay.com/
- * @requires   php-curl, json
+ * @requires   Zend, json
  */
 namespace PoundPay;
 
-require_once 'HTTP/Request2.php';
+require_once 'Zend/Http/Client.php';
 
 if( !extension_loaded("json") ) {
     $error_msg = "JSON extension is required for PoundPay client library";
@@ -119,8 +119,7 @@ class APIException extends Exception {
     /** @var APIResponse **/
     public $api_response;
 
-    /** @param APIResponse $api_response **/
-    public function __construct($api_response, $url) {
+    public function __construct(APIResponse $api_response, $url) {
         $status_code = $api_response->http_response->getStatus();
         $this->api_response = $api_response;
         $exceptionMessage = "PoundPay API error. http code: $status_code, " .
@@ -199,24 +198,18 @@ class APIClient {
         $url = "{$this->api_uri}/{$this->version}/{$endpoint}/";
         $method = strtoupper($method);
 
-        // Use the curl adapter - the socket adapter has problems connecting.
-        // Use follow_redirects - otherwise a bug causes PUT requests to be sent with an empty body
-        $config = array('adapter' => 'HTTP_Request2_Adapter_Curl',
-                        'follow_redirects'  => true);
-        
-        $request = new \HTTP_Request2($url, $method, $config);
+        $client = new \Zend_Http_Client($url);
 
         switch($method) {
             case "GET":
                 // append query vars
                 $url .= (FALSE === strpos($url, '?') ? "?" : "&") . $encoded;
-                $request->setUrl($url);
+                $client->setUri($url);
                 break;
 
             case "POST":
             case "PUT":
-                $request->setHeader('content-type', 'application/x-www-form-urlencoded');
-                $request->setBody($encoded);
+                $client->setRawData($encoded, \Zend_Http_Client::ENC_URLENCODED);
                 break;
 
            case "DELETE":
@@ -227,8 +220,8 @@ class APIClient {
                break;
         }
 
-        $request->setAuth($this->developer_sid, $this->auth_token);
-        $httpResponse = $request->send();
+        $client->setAuth($this->developer_sid, $this->auth_token);
+        $httpResponse = $client->request($method);
 
         $response = $this->last_response = new APIResponse($httpResponse);
         if ($response->is_error) {
@@ -253,8 +246,7 @@ class APIResponse {
     public $error_msg;
     public $http_response;
 
-    /** @param $http_response \HTTP_Request2_Response */
-    public function __construct($http_response) {
+    public function __construct(\Zend_Http_Response $http_response) {
         $this->http_response = $http_response;
 
         if($http_response->getStatus() != 204) {
