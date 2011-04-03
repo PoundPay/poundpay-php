@@ -13,16 +13,12 @@
  */
 namespace PoundPay;
 
-if( !extension_loaded("curl") ) {
-    $error_msg = "Curl extension is required for PoundPay client library";
-    throw(new \Exception($error_msg));
-}
+require_once 'HTTP/Request2.php';
 
 if( !extension_loaded("json") ) {
     $error_msg = "JSON extension is required for PoundPay client library";
     throw(new \Exception($error_msg));
 }
-
 
 function configure($developer_sid,
                    $auth_token,
@@ -124,10 +120,12 @@ class APIException extends Exception {
     public $api_response;
 
     /** @param APIResponse $api_response **/
-    public function __construct($api_response) {
+    public function __construct($api_response, $url) {
+        $status_code = $api_response->http_response->getStatus();
         $this->api_response = $api_response;
-        $exceptionMessage = "PoundPay API error: http code: $api_response->status_code, message: $api_response->error_msg, url: $api_response->url";
-        parent::__construct($exceptionMessage, $api_response->status_code);
+        $exceptionMessage = "PoundPay API error. http code: $status_code, " .
+                            "message: $api_response->error_msg, url: $url";
+        parent::__construct($exceptionMessage, $status_code);
     }
 }
 
@@ -144,7 +142,6 @@ class APIClient {
     protected $api_uri;
     protected $version;
 
-    protected $curl_handle;
     /** @var APIResponse the response from the last api call */
     protected $last_response;
 
@@ -186,34 +183,6 @@ class APIClient {
         return $this->last_response;
     }
 
-    /** curl wrapper for mocking purposes **/
-    protected function curl_init($url) {
-        $this->curl_handle = curl_init($url);
-    }
-
-    /** curl wrapper for mocking purposes **/
-    protected function curl_setopt($option, $value) {
-        return curl_setopt($this->curl_handle, $option, $value);
-    }
-
-    /** curl wrapper for mocking purposes **/
-    protected function curl_exec() {
-        return curl_exec($this->curl_handle);
-    }
-
-    /** curl wrapper for mocking purposes **/
-    protected function curl_getinfo($opt = 0) {
-        return curl_getinfo($this->curl_handle, $opt);
-    }
-
-    protected function curl_error() {
-        return curl_error($this->curl_handle);
-    }
-
-    protected function curl_close() {
-        return curl_close($this->curl_handle);
-    }
-
     /*
      * request()
      *   Sends an HTTP Request to the PoundPay API
@@ -223,85 +192,47 @@ class APIClient {
      *           send, for GET will be appended to the URL as query params
      */
     public function request($endpoint, $method='GET', $vars=array()) {
-        $fp = null;
-        $tmpfile = "";
         $encoded = http_build_query($vars);
 
         // construct full url
         $endpoint = rtrim($endpoint, "/");  // ensure that they're one slash at the end
         $url = "{$this->api_uri}/{$this->version}/{$endpoint}/";
+        $method = strtoupper($method);
 
-        // if GET and vars, append them
-        if($method == "GET") {
-            // checks to see if the path already has encoded attributes
-            // then just append the encoded string using & if it does or
-            // append post ?
-            $url .= (FALSE === strpos($url, '?') ? "?" : "&") . $encoded;
-        }
-        // initialize a new curl object
-        $this->curl_init($url);
+        // Use the curl adapter - the socket adapter has problems connecting.
+        // Use follow_redirects - otherwise a bug causes PUT requests to be sent with an empty body
+        $config = array('adapter' => 'HTTP_Request2_Adapter_Curl',
+                        'follow_redirects'  => true);
+        
+        $request = new \HTTP_Request2($url, $method, $config);
 
-        $this->curl_setopt(CURLOPT_RETURNTRANSFER, TRUE);
+        switch($method) {
+            case "GET":
+                // append query vars
+                $url .= (FALSE === strpos($url, '?') ? "?" : "&") . $encoded;
+                $request->setUrl($url);
+                break;
 
-        switch(strtoupper($method)) {
-
-           case "GET":
-               $this->curl_setopt(CURLOPT_HTTPGET, TRUE);
-               break;
-
-           case "POST":
-               $this->curl_setopt(CURLOPT_POST, TRUE);
-               $this->curl_setopt(CURLOPT_POSTFIELDS, $encoded);
-               break;
-
-           case "PUT":
-               $tmpfile = tempnam("/tmp", "put_");
-               $fp = fopen($tmpfile, 'r');
-
-               $this->curl_setopt(CURLOPT_POSTFIELDS, $encoded);
-               $this->curl_setopt(CURLOPT_CUSTOMREQUEST, "PUT");
-
-               file_put_contents($tmpfile, $encoded);
-
-               $this->curl_setopt(CURLOPT_INFILE, $fp);
-               $this->curl_setopt(CURLOPT_INFILESIZE, filesize($tmpfile));
-               break;
+            case "POST":
+            case "PUT":
+                $request->setHeader('content-type', 'application/x-www-form-urlencoded');
+                $request->setBody($encoded);
+                break;
 
            case "DELETE":
-               $this->curl_setopt(CURLOPT_CUSTOMREQUEST, "DELETE");
                break;
 
            default:
                throw(new Exception("Unknown method $method"));
                break;
-
         }
 
-        // send credentials
-        $this->curl_setopt(CURLOPT_USERPWD, $pwd = "{$this->developer_sid}:{$this->auth_token}");
-        $this->curl_setopt(CURLOPT_SSL_VERIFYPEER, false);
+        $request->setAuth($this->developer_sid, $this->auth_token);
+        $httpResponse = $request->send();
 
-        // do the request. If FALSE, then an exception occurred
-        if(FALSE === ($result = $this->curl_exec())) {
-            throw(new Exception("Curl failed with error: " . $this->curl_error()));
-        }
-
-        // get result code
-        $response_code = $this->curl_getinfo(CURLINFO_HTTP_CODE);
-
-        // unlink tmpfiles and clean up
-        if($fp) {
-            fclose($fp);
-        }
-        if(strlen($tmpfile)) {
-            unlink($tmpfile);
-        }
-
-        $this->curl_close();
-
-        $response = $this->last_response = new APIResponse($result, $response_code);
+        $response = $this->last_response = new APIResponse($httpResponse);
         if ($response->is_error) {
-            throw new APIException($response);
+            throw new APIException($response, $url);
         }
 
         return $response;
@@ -316,23 +247,22 @@ class APIClient {
  */
 class APIResponse {
 
-    public $body;
     public $json;
-    public $status_code;
     public $is_error;
     public $error_name;
     public $error_msg;
+    public $http_response;
 
-    public function __construct($body, $status_code) {
-        $this->body = $body;
-        $this->status_code = $status_code;
+    /** @param $http_response \HTTP_Request2_Response */
+    public function __construct($http_response) {
+        $this->http_response = $http_response;
 
-        if($status_code != 204) {
-            $this->json = json_decode($body, true);
+        if($http_response->getStatus() != 204) {
+            $this->json = json_decode($http_response->getBody(), true);
         }
 
         $this->is_error = FALSE;
-        if($this->error_msg = ($status_code >= 400)) {
+        if($http_response->getStatus() >= 400) {
             $this->is_error = TRUE;
             $this->error_name = $this->json['error_name'];
             $this->error_msg = $this->json['error_message'];

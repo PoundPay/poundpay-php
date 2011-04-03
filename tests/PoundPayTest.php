@@ -1,6 +1,7 @@
 <?php
 
 require_once dirname(__FILE__) . '/../PoundPay.php';
+require_once 'HTTP/Request2/Adapter/Mock.php';
 require_once 'PHPUnit/Autoload.php';
 
 class PoundPayTest extends PHPUnit_Framework_TestCase {
@@ -34,7 +35,9 @@ class ResourceTest extends PoundPayTest {
     }
 
     protected function makeApiResponse($data, $status_code = 200) {
-        return new PoundPay\APIResponse(json_encode($data), $status_code);
+        $text = "HTTP/1.0 200 OK\n\n" . json_encode($data);
+        $http_response = HTTP_Request2_Adapter_Mock::createResponseFromString($text);
+        return new PoundPay\APIResponse($http_response);
     }
 
     /** @dataProvider resourceProvider */
