@@ -5,28 +5,34 @@ require_once 'PHPUnit/Autoload.php';
 
 class PoundPayTest extends PHPUnit_Framework_TestCase {
 
-    protected function getConfig() {
-        return array(
-            'developer_sid' => 'DV0383d447360511e0bbac00264a09ff3c',
-            'auth_token' => 'c31155b9f944d7aed204bdb2a253fef13b4fdcc6ae15402004',
-            'api_url' => 'https://api.zzpoundpay.com',
-            'api_version' => 'silver'
-        );
+    public function assertAny($constraint, $other) {
+        foreach ($other as $element) {
+            if ($constraint->evaluate($element)) {
+                return;
+            }
+        }   
+        $this->fail(sprintf('Failed asserting any in %s %s', print_r($other, true), $constraint->toString()));
+    }
+
+    protected function makeTestData($id = 'test', $count = 3) {
+        $data = array();
+        for ($i = 1; $i <= $count; ++$i) {
+            $data["{$id}_key$i"] = "{$id}_val$i";
+        }
+        return $data;
     }
 }
 
 class ResourceTest extends PoundPayTest {
 
-    protected $config;
     protected $client;
     
     public function resourceProvider() {
-        return array(array('developers', 'PoundPay\\Developer'),
-                     array('payments', 'PoundPay\\Payment'));
+        return array(array('developers', 'PoundPay\Developer'),
+                     array('payments', 'PoundPay\Payment'));
     }
 
     protected function setUp() {
-        $this->config = $this->getConfig();
         $this->client = $this->getMockBuilder('PoundPay\APIClient')
                        ->disableOriginalConstructor()
                        ->getMock();
@@ -34,15 +40,14 @@ class ResourceTest extends PoundPayTest {
     }
 
     protected function makeApiResponse($data, $status_code = 200) {
-        $text = "HTTP/1.0 200 OK\n\n" . json_encode($data);
-        $http_response = Zend_Http_Response::fromString($text);
+        $http_response = new Zend_Http_Response($status_code, array(), json_encode($data));
         return new PoundPay\APIResponse($http_response);
     }
 
     /** @dataProvider resourceProvider */
     public function testFind($resource, $class) {
         $findSid = 'foo';
-        $findAttrs = array('foo' => 'bar');
+        $findAttrs = $this->makeTestData();
         $apiResponse = $this->makeApiResponse($findAttrs);
 
         $this->client->expects($this->once())
@@ -57,7 +62,7 @@ class ResourceTest extends PoundPayTest {
 
     /** @dataProvider resourceProvider */
     public function testAll($resource, $class) {
-        $allAttrs = array(array('foo' => 'bar'), array('foo2' => 'bar2'));
+        $allAttrs = array($this->makeTestData('foo'), $this->makeTestData('bar'));
         $apiResponse = $this->makeApiResponse(array($resource => $allAttrs));
 
         $this->client->expects($this->once())
@@ -76,8 +81,8 @@ class ResourceTest extends PoundPayTest {
     /** @dataProvider resourceProvider */
     public function testSaveUpdate($resource, $class) {
         $sid = 'DVxxx';
-        $initVars = array('sid' => $sid, 'k1' => 'v1', 'k2' => 'v2');
-        $responseVars = array('k3' => 'v3', 'k4' => 'v4');
+        $initVars = array('sid' => $sid) + $this->makeTestData('init');
+        $responseVars = $this->makeTestData('response');
         $resourceObj = new $class($initVars);
         $apiResponse = $this->makeApiResponse($responseVars);
 
@@ -93,8 +98,8 @@ class ResourceTest extends PoundPayTest {
 
     /** @dataProvider resourceProvider */
     public function testSaveCreate($resource, $class) {
-        $initVars = array('k1' => 'v1', 'k2' => 'v2');
-        $responseVars = array('k3' => 'v3', 'k4' => 'v4');
+        $initVars = $this->makeTestData('init');
+        $responseVars = $this->makeTestData('response');
         $resourceObj = new $class($initVars);
         $apiResponse = $this->makeApiResponse($responseVars);
 
@@ -106,6 +111,114 @@ class ResourceTest extends PoundPayTest {
         $resourceObj->save();
         $expectedObj = new $class($initVars + $responseVars);
         $this->assertEquals($resourceObj, $expectedObj);
+    }
+
+    /** @dataProvider resourceProvider */
+    public function testDelete($resource, $class) {
+        $resourceObj = new $class();
+        $sid = 'DVxxx';
+
+        $this->client->expects($this->once())
+                     ->method('delete')
+                     ->with($this->equalTo("$resource/$sid"));
+
+        $resourceObj->delete($sid);
+    }
+}
+
+require_once 'Zend/Http/Client/Adapter/Interface.php';
+
+class APIClientTest extends PoundPayTest {
+
+    protected function createClient() {
+        $client = new PoundPay\APIClient('DVtest', 'testAuth', 'https://test.com', 'testVer');
+        $adapter = $this->getMock('Zend_Http_Client_Adapter_Interface');
+        $client->get_http_client()->setAdapter($adapter);
+        return $client;
+    }
+
+    protected function setupClient($response = array(), $statusCode = 200) {
+        $client = $this->createClient();
+        $adapter = $client->get_http_client()->getAdapter();
+        $adapter->expects($this->once())
+                ->method('read')
+                ->will($this->returnValue($this->makeHttpResponseText($response, $statusCode)));
+        return $client;
+    }
+
+    public function methodProvider() {
+        $methodData = $this->makeTestData();
+        return array(array('get', null),
+                     array('delete', null),
+                     array('post', $methodData),
+                     array('put', $methodData));
+    }
+
+    protected function callMethod($client, $method, $methodData) {
+        if ($methodData === null) {
+            return $client->$method('testEndpoint');
+        } else {
+            return $client->$method('testEndpoint', $methodData);
+        }
+    }
+
+    protected function makeHttpResponseText($data, $status_code = 200) {
+        return (string) new Zend_Http_Response($status_code, array(), json_encode($data));
+    }
+
+    /** @dataProvider methodProvider */
+    public function testMethodFailure($method, $methodData) {
+        $statusCode = 500;
+        $client = $this->setupClient(array(), $statusCode);
+
+        try {
+            $this->callMethod($client, $method, $methodData);
+        } catch (PoundPay\APIException $e) {
+            $this->assertEquals($statusCode, $e->getCode());
+            $this->assertSame($e->api_response, $client->get_last_response());
+            return;
+        }
+
+        $this->fail('APIException was not thrown');
+    }
+
+    /** @dataProvider methodProvider */
+    public function testMethodRequest($method, $methodData) {
+        $client = $this->setupClient();
+
+        $adapter = $client->get_http_client()->getAdapter();
+        $self = $this;
+        $adapter->expects($this->once())
+                ->method('write')
+                ->will($this->returnCallback(function ($httpMethod, $url, $http_ver, $headers, $body)
+                                             use ($self, $method, $methodData) {
+                    $self->assertEquals(strtoupper($method), $httpMethod);
+                    $self->assertRegExp('|https://test.com(:443)?/testVer/testEndpoint|', (string)$url);
+                    $self->assertContains('Authorization: Basic ' . base64_encode('DVtest:testAuth'), $headers);
+                    if ($methodData !== null) {
+                        $self->assertAny($self->stringStartsWith('Content-Type: application/x-www-form-urlencoded'),
+                                         $headers);
+                        $self->assertEquals($body, http_build_query($methodData));
+                    }
+                }));
+
+        $this->callMethod($client, $method, $methodData);
+    }
+
+    /** @dataProvider methodProvider */
+    public function testMethodResult($method, $methodData) {
+        $responseData = $this->makeTestData();
+        $client = $this->setupClient($responseData);
+
+        $response = $this->callMethod($client, $method, $methodData);
+
+        $this->assertEquals($responseData, $response->json);
+        $this->assertSame($response, $client->get_last_response());
+    }
+
+    public function testDeveloperSidStartsWithDv() {
+        $this->setExpectedException('Exception');
+        new PoundPay\APIClient('xxx', 'xxx');
     }
 
 }
