@@ -37,7 +37,7 @@ class Resource {
     /** @var string must be set by subclass **/
     protected static $_name;
 
-    public function __construct($vars) {
+    public function __construct($vars = array()) {
         $this->setVars($vars);
     }
 
@@ -142,21 +142,27 @@ class APIClient {
     /** @var APIResponse the response from the last api call */
     protected $last_response;
     /** @var \Zend_Http_Client */
-    protected $client;
+    protected $http_client;
 
     /**
      * @param string $developer_sid Your Developer SID
      * @param string $auth_token Your account's auth_token
      * @param string $api_uri The PoundPay REST Service URI, defaults to https://api.poundpay.com
      * @param string $version The PoundPay API version
+     * @param \Zend_Http_Client|null $http_client If null, a default client will be used
      */
     public function __construct($developer_sid,
                                 $auth_token,
                                 $api_uri = "https://api.poundpay.com",
-                                $version = 'silver') {
+                                $version = 'silver',
+                                $http_client = null) {
 
-        $this->client = new \Zend_Http_Client();
-        $this->client->setAuth($developer_sid, $auth_token);
+        if (strpos($developer_sid, 'DV') !== 0) {
+            throw new Exception('Invalid developer_sid (must start with DV)');
+        }
+
+        $this->http_client = $http_client ? $http_client : new \Zend_Http_Client();
+        $this->http_client->setAuth($developer_sid, $auth_token);
         $this->base_uri = "$api_uri/$version/";
     }
 
@@ -165,13 +171,13 @@ class APIClient {
     }
 
     public function post($endpoint, $vars) {
-        $this->client->setParameterPost($vars);
+        $this->http_client->setParameterPost($vars);
         return $this->request($endpoint, 'POST');
     }
 
     public function put($endpoint, $vars) {
-        $this->client->setEncType(\Zend_Http_Client::ENC_URLENCODED);
-        $this->client->setParameterPost($vars);
+        $this->http_client->setEncType(\Zend_Http_Client::ENC_URLENCODED);
+        $this->http_client->setParameterPost($vars);
         return $this->request($endpoint, 'PUT');
     }
 
@@ -183,11 +189,8 @@ class APIClient {
         return $this->last_response;
     }
 
-    /**
-     * @param Zend_Http_Client_Adapter_Interface|string $adapter
-     */
-    public function setAdapter($adapter) {
-        $this->client->setAdapter($adapter);
+    public function get_http_client() {
+        return $this->http_client;
     }
 
     /**
@@ -198,13 +201,13 @@ class APIClient {
      * @param string $method The HTTP method to use, defaults to GET
      */
     protected function request($endpoint, $method) {
-        $this->client->setUri($this->base_uri . $endpoint);
+        $this->http_client->setUri($this->base_uri . $endpoint);
         
-        $httpResponse = $this->client->request($method);
+        $httpResponse = $this->http_client->request($method);
 
         $response = $this->last_response = new APIResponse($httpResponse);
         if ($response->is_error) {
-            throw new APIException($response, $this->client->getUri(true));
+            throw new APIException($response, $this->http_client->getUri(true));
         }
 
         return $response;
@@ -237,8 +240,8 @@ class APIResponse {
         $this->is_error = FALSE;
         if($http_response->getStatus() >= 400) {
             $this->is_error = TRUE;
-            $this->error_name = $this->json['error_name'];
-            $this->error_msg = $this->json['error_message'];
+            $this->error_name = isset($this->json['error_name']) ? $this->json['error_name'] : '<unknown>';
+            $this->error_msg = isset($this->json['error_message']) ? $this->json['error_message'] : '<unknown>';
         }
     }
 }
