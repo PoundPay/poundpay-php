@@ -77,3 +77,10 @@ Serving IFRAME
         server: "https://www-sandbox.poundpay.com"  // Exclude for production
       });
     </script>
+
+
+Unit Tests
+----------
+From the `tests` directory, run:
+
+    phpunit .
