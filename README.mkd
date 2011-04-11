@@ -6,7 +6,7 @@ Poundpay is a payments platform for marketplaces
 Requirements
 -------
 * PHP 5.3 or greater
-* Zend library (for Zend\_Http\_Client).
+* Zend library (for Zend_Http_Client).
   * Install via pear:
 
             pear channel-discover zend.googlecode.com/svn
@@ -14,7 +14,7 @@ Requirements
 
   * Or download:
 
-        [http://framework.zend.com/download/latest](http://framework.zend.com/download/latest)
+        http://framework.zend.com/download/latest
 
 
 Installation
