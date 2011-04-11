@@ -1,0 +1,79 @@
+Poundpay
+=====
+Poundpay is a payments platform for marketplaces
+
+
+Requirements
+-------
+* PHP 5.3 or greater
+* Zend library (for Zend\_Http\_Client).
+  * Install via pear:
+
+            pear channel-discover zend.googlecode.com/svn
+            pear install zend/zend
+
+  * Or download:
+
+        [http://framework.zend.com/download/latest](http://framework.zend.com/download/latest)
+
+
+Installation
+-------
+No installation required. To use the library, just include `PoundPay/Autoload.php`.
+
+Configuration
+-------
+The first step in using the library is calling `PoundPay\Core::configure()`. Example:
+
+    $account_sid = 'DVxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+    $auth_token = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+    $api_uri = 'https://api-sandbox.poundpay.com';
+    $version = 'silver';
+
+    PoundPay\Core::configure($account_sid, $auth_token, $api_uri, $version);
+
+
+Creating a Payment
+-----------------
+Instantiate a new PoundPay\Payment object with parameters as in this example:
+
+    $payment = new PoundPay\Payment(array(
+      'amount' => 20000, // in USD cents
+      'payer_fee_amount' => 0,
+      'recipient_fee_amount' => 500,
+      'payer_email_address' => 'fred@example.com',
+      'recipient_email_address' => 'immanuel@example.com',
+      'description' => 'Beats by Dr. Dre (White)',
+    ));
+
+Then, post the payment to the server:
+
+    $payment->save();
+
+The $payment object will now contain an `sid` property containing the id returned by the server.
+
+
+Serving IFRAME
+--------------
+
+    <script src="https://www.poundpay.com/js/poundpay.js"></script>
+
+    <div id="pound-root"></div>
+
+    <script>
+      function handlePaymentSuccess() {
+        // do something
+      }
+
+      function handlePaymentError() {
+        // handle error
+      }
+
+      PoundPay.init({
+        payment_sid: $payment->sid,
+        success: handlePaymentSuccess,
+        error: handlePaymentError,
+        cardholder_name: "Fred Nietzsche", // Optional
+        server: "https://www-sandbox.poundpay.com"  // Exclude for production
+      });
+    </script>
