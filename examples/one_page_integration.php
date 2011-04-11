@@ -1,23 +1,26 @@
 <?php
-  require "PoundPay.php";
+  require "PoundPay/Autoload.php";
 
   $account_sid = 'DVxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
   $auth_token = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
   $api_uri = 'https://api-sandbox.poundpay.com';
+  $version = 'silver';
   $www_uri = 'https://www-sandbox.poundpay.com';
 
-  $client = new PoundPayAPIClient($account_sid, $auth_token, $api_uri);
-  $data = array(
-    "amount" => 20000, // in USD cents
-    "payer_fee_amount" => 0,
-    "recipient_fee_amount" => 500,
-    "payer_email_address" => "house@example.com",
-    "recipient_email_address" => "david@example.com",
-    "description" => "Beats by Dr. Dre (White)",
-  );
+  PoundPay\Core::configure($account_sid,
+                           $auth_token,
+                           $api_uri,
+                           $version);
 
-  $response = $client->request("/payments/", "POST", $data);
-  $payment = $response->response_json;
+  $payment = new PoundPay\Payment(array(
+      'amount' => 20000, // in USD cents
+      'payer_fee_amount' => 0,
+      'recipient_fee_amount' => 500,
+      'payer_email_address' => 'fred@example.com',
+      'recipient_email_address' => 'immanuel@example.com',
+      'description' => 'Beats by Dr. Dre (White)',
+  ));
+  $payment->save();
 ?>
 
 <html>
@@ -32,7 +35,9 @@
     <script type="text/javascript">
       PoundPay.init({
         payment_sid: "<?= $payment->sid ?>",
-        server: "<?= $www_uri ?>"
+        server: "<?= $www_uri ?>",
+        success: function() {},
+        error: function() {alert('Oops! An error occurred processing the request.')}
       })
     </script>
   </body>
