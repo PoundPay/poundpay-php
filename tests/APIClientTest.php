@@ -8,13 +8,13 @@ class APIClientTest extends TestCase {
     protected function createClient() {
         $client = new APIClient('DVtest', 'testAuth', 'https://test.com', 'testVer');
         $adapter = $this->getMock('Zend_Http_Client_Adapter_Interface');
-        $client->get_http_client()->setAdapter($adapter);
+        $client->getHttpClient()->setAdapter($adapter);
         return $client;
     }
 
     protected function setupClient($response = array(), $statusCode = 200) {
         $client = $this->createClient();
-        $adapter = $client->get_http_client()->getAdapter();
+        $adapter = $client->getHttpClient()->getAdapter();
         $adapter->expects($this->once())
                 ->method('read')
                 ->will($this->returnValue($this->makeHttpResponseText($response, $statusCode)));
@@ -50,7 +50,7 @@ class APIClientTest extends TestCase {
             $this->callMethod($client, $method, $methodData);
         } catch (APIException $e) {
             $this->assertEquals($statusCode, $e->getCode());
-            $this->assertSame($e->api_response, $client->get_last_response());
+            $this->assertSame($e->api_response, $client->getLastResponse());
             return;
         }
 
@@ -61,7 +61,7 @@ class APIClientTest extends TestCase {
     public function testMethodRequest($method, $methodData) {
         $client = $this->setupClient();
 
-        $adapter = $client->get_http_client()->getAdapter();
+        $adapter = $client->getHttpClient()->getAdapter();
         $self = $this;
         $adapter->expects($this->once())
                 ->method('write')
@@ -88,7 +88,7 @@ class APIClientTest extends TestCase {
         $response = $this->callMethod($client, $method, $methodData);
 
         $this->assertEquals($responseData, $response->json);
-        $this->assertSame($response, $client->get_last_response());
+        $this->assertSame($response, $client->getLastResponse());
     }
 
     public function testDeveloperSidStartsWithDv() {

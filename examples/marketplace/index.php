@@ -39,6 +39,6 @@ $payment->save();
       })
     </script>
     <h2>PoundPay Response for PaymentRequest</h2>
-    <pre><?php echo PoundPay\Core::get_last_response()->http_response->getBody() ?></pre>
+    <pre><?php echo PoundPay\Core::getLastResponse()->http_response->getBody() ?></pre>
   </body>
 </html>

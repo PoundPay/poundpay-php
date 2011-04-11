@@ -70,11 +70,11 @@ class APIClient {
         return $this->request($endpoint, 'DELETE');
     }
 
-    public function get_last_response() {
+    public function getLastResponse() {
         return $this->last_response;
     }
 
-    public function get_http_client() {
+    public function getHttpClient() {
         return $this->http_client;
     }
 

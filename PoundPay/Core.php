@@ -20,7 +20,7 @@ class Core {
         Resource::setClient(new APIClient($developer_sid, $auth_token, $api_uri, $version));
     }
 
-    public static function get_last_response() {
-        return Resource::getClient()->get_last_response();
+    public static function getLastResponse() {
+        return Resource::getClient()->getLastResponse();
     }
 }
