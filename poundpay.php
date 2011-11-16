@@ -201,8 +201,8 @@ class PoundPayAPIResponse {
         $this->is_error = FALSE;
         if($this->error_msg = ($status_code >= 400)) {
             $this->is_error = TRUE;
-            $this->error_name = $this->response_json['error_name'];
-            $this->error_msg = $this->response_json['error_message'];
+            $this->error_name = $this->response_json->error_name;
+            $this->error_msg = $this->response_json->error_message;
         }
 
     }
