@@ -6,20 +6,21 @@ Poundpay is a payments platform for marketplaces
 Requirements
 -------
 * PHP 5.3 or greater
-* Zend library (for Zend_Http_Client).
+* PHP curl extension
+* HTTP_Request.
   * Install via pear:
-
-            pear channel-discover zend.googlecode.com/svn
-            pear install zend/zend
+  
+            pear install HTTP_Request2
 
   * Or download:
 
-        http://framework.zend.com/download/latest
+        http://pear.php.net/package/HTTP_Request2/download
 
 
 Installation
 -------
 No installation required. To use the library, just include `PoundPay/Autoload.php`.
+
 
 Configuration
 -------
@@ -53,8 +54,8 @@ Then, post the payment to the server:
 The $payment object will now contain an `sid` property containing the id returned by the server.
 
 
-Serving IFRAME
---------------
+Serving the payment IFRAME
+--------------------------
 
     <script src="https://www.poundpay.com/js/poundpay.js"></script>
 
@@ -77,6 +78,30 @@ Serving IFRAME
         server: "https://www-sandbox.poundpay.com"  // Exclude for production
       });
     </script>
+
+
+Creating a Charge Permission
+----------------------------
+Instantiate a new PoundPay\Payment object with parameters as in this example:
+
+    $charge_permission = new PoundPay\ChargePermission(array(
+      'email_address' => 'fred@example.com',
+    ));
+
+Then, post the charge permission to the server:
+
+    $charge_permission->save();
+
+The $charge_permission object will now contain an `sid` property containing the
+id of the created charge permission returned by the server.
+
+
+Deactivating a Charge Permission
+--------------------------------
+
+    $charge_permission = PoundPay\ChargePermission.find(charge_permission_sid)
+    $charge_permission->state = 'inactive'
+    $charge_permission.save()
 
 
 Unit Tests

@@ -1,6 +1,7 @@
 <?php
 namespace PoundPay;
 require_once __DIR__ . '/TestCase.php';
+require_once 'HTTP/Request2/Response.php';
 
 class ResourceTest extends TestCase {
 
@@ -18,9 +19,12 @@ class ResourceTest extends TestCase {
         Resource::setClient($this->client);
     }
 
-    protected function makeApiResponse($data, $status_code = 200) {
-        $http_response = new \Zend_Http_Response($status_code, array(), json_encode($data));
-        return new APIResponse($http_response);
+    protected function makeApiResponse($data, $statusCode = 200) {
+        $reasonPhrase = \HTTP_Request2_Response::getDefaultReasonPhrase($statusCode);
+        $statusLine = sprintf('HTTP/1.1 %d %s \r\n\r\n', $statusCode, $reasonPhrase);
+        $response = new \HTTP_Request2_Response($statusLine);
+        $response->appendBody(json_encode($data));
+        return new APIResponse($response);
     }
 
     /** @dataProvider resourceProvider */

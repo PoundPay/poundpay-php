@@ -7,10 +7,10 @@ class TestCase extends \PHPUnit_Framework_TestCase {
 
     public function assertAny($constraint, $other) {
         foreach ($other as $element) {
-            if ($constraint->evaluate($element)) {
+            if ($constraint->evaluate($element, '', TRUE)) {
                 return;
             }
-        }   
+        }
         $this->fail(sprintf('Failed asserting any in %s %s', print_r($other, true), $constraint->toString()));
     }
 

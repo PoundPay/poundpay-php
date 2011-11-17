@@ -1,23 +1,24 @@
 <?php
 namespace PoundPay;
 require_once __DIR__ . '/TestCase.php';
-require_once 'Zend/Http/Client/Adapter/Interface.php';
+require_once 'HTTP/Request2/Adapter/Curl.php';
+require_once 'PHPUnit/Autoload.php';
 
 class APIClientTest extends TestCase {
+    protected $adapter = null;
 
     protected function createClient() {
         $client = new APIClient('DVtest', 'testAuth', 'https://test.com', 'testVer');
-        $adapter = $this->getMock('Zend_Http_Client_Adapter_Interface');
-        $client->getHttpClient()->setAdapter($adapter);
+        $this->adapter = $this->getMock('HTTP_Request2_Adapter_Curl');
+        $client->getHttpClient()->setAdapter($this->adapter);
         return $client;
     }
 
     protected function setupClient($response = array(), $statusCode = 200) {
         $client = $this->createClient();
-        $adapter = $client->getHttpClient()->getAdapter();
-        $adapter->expects($this->once())
-                ->method('read')
-                ->will($this->returnValue($this->makeHttpResponseText($response, $statusCode)));
+        $this->adapter->expects($this->once())
+                      ->method('sendRequest')
+                      ->will($this->returnValue($this->makeHttpResponse($response, $statusCode)));
         return $client;
     }
 
@@ -37,8 +38,12 @@ class APIClientTest extends TestCase {
         }
     }
 
-    protected function makeHttpResponseText($data, $status_code = 200) {
-        return (string) new \Zend_Http_Response($status_code, array(), json_encode($data));
+    protected function makeHttpResponse($data, $statusCode = 200) {
+        $reasonPhrase = \HTTP_Request2_Response::getDefaultReasonPhrase($statusCode);
+        $statusLine = sprintf('HTTP/1.1 %d %s \r\n\r\n', $statusCode, $reasonPhrase);
+        $response = new \HTTP_Request2_Response($statusLine);
+        $response->appendBody(json_encode($data));
+        return $response; 
     }
 
     /** @dataProvider methodProvider */
@@ -61,19 +66,19 @@ class APIClientTest extends TestCase {
     public function testMethodRequest($method, $methodData) {
         $client = $this->setupClient();
 
-        $adapter = $client->getHttpClient()->getAdapter();
+        $adapter = $this->adapter;
         $self = $this;
         $adapter->expects($this->once())
-                ->method('write')
-                ->will($this->returnCallback(function ($httpMethod, $url, $http_ver, $headers, $body)
-                                             use ($self, $method, $methodData) {
-                    $self->assertEquals(strtoupper($method), $httpMethod);
-                    $self->assertRegExp('|https://test.com(:443)?/testVer/testEndpoint|', (string)$url);
-                    $self->assertContains('Authorization: Basic ' . base64_encode('DVtest:testAuth'), $headers);
+                ->method('sendRequest')
+                ->will($this->returnCallback(function (\HTTP_Request2 $request)
+                                             use ($self, $method, $methodData) {    
+                    $self->assertEquals(strtoupper($method), $request->getMethod());
+                    $self->assertRegExp('|https://test.com(:443)?/testVer/testEndpoint|', (string)$request->getUrl());
                     if ($methodData !== null) {
-                        $self->assertAny($self->stringStartsWith('Content-Type: application/x-www-form-urlencoded'),
-                                         $headers);
-                        $self->assertEquals($body, http_build_query($methodData));
+                        $headers = $request->getHeaders();
+                        $self->assertTrue(array_key_exists('content-type', $headers));
+                        $self->assertEquals($headers['content-type'], 'application/x-www-form-urlencoded');
+                        $self->assertEquals($request->getBody(), http_build_query($methodData));
                     }
                 }));
 
@@ -92,7 +97,7 @@ class APIClientTest extends TestCase {
     }
 
     public function testDeveloperSidStartsWithDv() {
-        $this->setExpectedException('Exception');
+        $this->setExpectedException('InvalidArgumentException', 'Invalid developer_sid (must start with DV)');
         new APIClient('xxx', 'xxx');
     }
 

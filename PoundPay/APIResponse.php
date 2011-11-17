@@ -5,13 +5,14 @@
  * @category   APIClients
  * @package    PoundPay
  * @author     PoundPay Inc.
- * @version    v2.0.0
+* @version    v2.1.0
  * @link       http://dev.poundpay.com/
  */
 
 
 namespace PoundPay;
 require_once __DIR__ . '/Autoload.php';
+require_once 'HTTP/Request2/Response.php';
 
 if( !extension_loaded("json") ) {
     $error_msg = "JSON extension is required for PoundPay\\APIResponse";
@@ -31,10 +32,10 @@ class APIResponse {
     public $error_name;
     /** @var string The error message if $is_error is true */
     public $error_msg;
-    /** @var \Zend_Http_Response The lower level HTTP response object */
+    /** @var \HTTP_Request2_Response The lower level HTTP response object */
     public $http_response;
 
-    public function __construct(\Zend_Http_Response $http_response) {
+    public function __construct(\HTTP_Request2_Response $http_response) {
         $this->http_response = $http_response;
 
         if($http_response->getStatus() != 204) {

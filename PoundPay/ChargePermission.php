@@ -11,8 +11,8 @@
 
 
 namespace PoundPay;
+require_once __DIR__ . '/Autoload.php';
 
-/*
- * Base exception class for PoundPay errors.
- */
-class Exception extends \Exception {}
+class ChargePermission extends Resource {
+    protected static $_name = "charge_permissions";
+}
