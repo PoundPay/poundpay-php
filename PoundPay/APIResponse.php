@@ -5,7 +5,7 @@
  * @category   APIClients
  * @package    PoundPay
  * @author     PoundPay Inc.
-* @version    v2.1.0
+ * @version    v2.1.0
  * @link       http://dev.poundpay.com/
  */
 

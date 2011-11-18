@@ -5,7 +5,7 @@
  * @category   APIClients
  * @package    PoundPay
  * @author     PoundPay Inc.
-* @version    v2.1.0
+ * @version    v2.1.0
  * @link       http://dev.poundpay.com/
  */
 
@@ -29,8 +29,8 @@ class Resource {
         }
     }
 
-    public static function all() {
-        $resp = self::$_client->get(static::$_name);
+    public static function all($params=null) {
+        $resp = self::$_client->get(static::$_name, $params);
         $resources = array();
         foreach ($resp->json[static::$_name] as $vars) {
             $resources[] = new static($vars);

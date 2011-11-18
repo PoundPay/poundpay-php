@@ -76,8 +76,6 @@ class APIClientTest extends TestCase {
                     $self->assertRegExp('|https://test.com(:443)?/testVer/testEndpoint|', (string)$request->getUrl());
                     if ($methodData !== null) {
                         $headers = $request->getHeaders();
-                        $self->assertTrue(array_key_exists('content-type', $headers));
-                        $self->assertEquals($headers['content-type'], 'application/x-www-form-urlencoded');
                         $self->assertEquals($request->getBody(), http_build_query($methodData));
                     }
                 }));

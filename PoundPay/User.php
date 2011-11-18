@@ -13,6 +13,6 @@
 namespace PoundPay;
 require_once __DIR__ . '/Autoload.php';
 
-class ChargePermission extends Resource {
-    protected static $_name = "charge_permissions";
+class User extends Resource {
+    protected static $_name = "users";
 }

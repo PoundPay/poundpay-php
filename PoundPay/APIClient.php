@@ -54,7 +54,10 @@ class APIClient {
         $this->base_uri = "$api_uri/$version/";
     }
 
-    public function get($endpoint) {
+    public function get($endpoint, $params=null) {
+        if ($params != null) {
+            $endpoint = $endpoint . '?' . http_build_query($params);
+        }
         return $this->request($endpoint, 'GET');
     }
 
@@ -64,12 +67,15 @@ class APIClient {
     }
 
     public function put($endpoint, $vars) {
-        # XXX: HTTP_Request.getBody() does not use addPostParameter for PUTs
-        $this->http_client->setHeader('Content-Type', 'application/x-www-form-urlencoded'); 
+        # XXX: nginx doesn't accept chunked requests
+        $this->http_client->setHeader('Transfer-Encoding', '');
+
+        # XXX: HTTP_Request.getBody() does not use addPostParameter for PUTs 
         $body = http_build_query($vars, '', '&');
         if (!$this->http_client->getConfig('use_brackets')) {
             $body = preg_replace('/%5B\d+%5D=/', '=', $body);
         }
+        $body = str_replace('%7E', '~', $body);
         $this->http_client->setBody($body);
 
         return $this->request($endpoint, 'PUT');
