@@ -109,3 +109,13 @@ Unit Tests
 From the `tests` directory, run:
 
     phpunit .
+
+
+Example Marketplace
+-------------------
+Assuming you've git cloned poundpay-php to /home/me/code/poundpay-php
+ 
+$ sudo cp /home/me/code/poundpay-php/examples/marketplace/simplemp.conf /etc/nginx/conf.d/
+$ sudo sed -i 's/{path-to-poundpay-php}/\/home\/me\/code\/poundpay-php/g' /etc/nginx/conf.d/simplemp.conf
+$ sudo service nginx reload
+$ php5-cgi -b 127.0.0.1:9000
