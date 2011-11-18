@@ -113,7 +113,7 @@ From the `tests` directory, run:
 
 Example Marketplace
 -------------------
-Assuming you've git cloned poundpay-php to `/home/me/code/poundpay-php`
+Assuming you've git cloned poundpay-php to `/home/me/code/poundpay-php`:
  
     $ sudo cp /home/me/code/poundpay-php/examples/marketplace/simplemp.conf /etc/nginx/conf.d/
     $ sudo sed -i 's/{path-to-poundpay-php}/\/home\/me\/code\/poundpay-php/g' /etc/nginx/conf.d/simplemp.conf
