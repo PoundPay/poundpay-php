@@ -4,7 +4,7 @@ Poundpay is a payments platform for marketplaces
 
 
 Requirements
--------
+------------
 * PHP 5.3 or greater
 * PHP curl extension
 * HTTP_Request.
@@ -18,12 +18,16 @@ Requirements
 
 
 Installation
--------
-No installation required. To use the library, just include `PoundPay/Autoload.php`.
+------------
+
+    $ pear channel-discover pearhub.org
+    $ pear install pearhub/poundpay
+
+To use the library, just include `PoundPay/Autoload.php`.
 
 
 Configuration
--------
+-------------
 The first step in using the library is calling `PoundPay\Core::configure()`. Example:
 
     $account_sid = 'DVxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
@@ -35,7 +39,7 @@ The first step in using the library is calling `PoundPay\Core::configure()`. Exa
 
 
 Creating a Payment
------------------
+------------------
 Instantiate a new PoundPay\Payment object with parameters as in this example:
 
     $payment = new PoundPay\Payment(array(
