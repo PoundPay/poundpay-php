@@ -100,11 +100,11 @@ function createUser () {
 
 function authorizePayment () {
   var args = {};
-  args.sid = $('#operating_payment_sid').val()
+  args.sid = $('#operating_payment_sid').val().split(' ')
   var request = {};
   request.url = "payment/authorize";
   request.type = "POST";
-  request.data = $.param(args);
+  request.data = $.param(args, true);
   request.success = function(data) {
     $('#operation_results').append(data);
   };
@@ -113,11 +113,11 @@ function authorizePayment () {
 
 function escrowPayment () {
   var args = {};
-  args.sid = $('#operating_payment_sid').val()
+  args.sid = $('#operating_payment_sid').val().split(' ')
   var request = {};
   request.url = "payment/escrow";
   request.type = "POST";
-  request.data = $.param(args);
+  request.data = $.param(args, true);
   request.success = function(data) {
     $('#operation_results').append(data);
   };
@@ -151,11 +151,17 @@ function cancelPayment () {
 }
 
 function startIFrame() {
+  payment_sids = $('#payment_id').val().split(' ');
+  if (payment_sids.length == 0)
+      payment_sids = null;
+  else if (payment_sids.length == 1)
+      payment_sids = payment_sids[0];
+
   // invoke Pound iframe
   var args = {
     success: paymentSuccessCallback,
     error: paymentErrorCallback,
-    payment_sid: $('#payment_id').val(),
+    payment_sid: payment_sids,
     server: $('#server').val(),
     name: $('#cardholder_name').val(),
     address_street: '',

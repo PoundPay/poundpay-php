@@ -49,6 +49,7 @@ class APIClient {
 
         $this->http_client = $http_client ? $http_client : new \HTTP_Request2();
         $this->http_client->setAuth($developer_sid, $auth_token);
+        $this->http_client->setConfig('use_brackets', false);
         $adapter = new \HTTP_Request2_Adapter_Curl();
         $this->http_client->setAdapter($adapter);
         $this->base_uri = "$api_uri/$version/";
