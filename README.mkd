@@ -75,10 +75,11 @@ Serving the payment IFRAME
       }
 
       PoundPay.init({
-        payment_sid: $payment->sid,
+        payment_sid: "<?= $payment1->sid ?>",
         success: handlePaymentSuccess,
         error: handlePaymentError,
-        cardholder_name: "Fred Nietzsche", // Optional
+        first_name: "Fred", // Optional
+        last_name: "Nietzsche", // Optional
         server: "https://www-sandbox.poundpay.com"  // Exclude for production
       });
     </script>
@@ -89,8 +90,7 @@ Creating a Charge Permission
 Instantiate a new PoundPay\Payment object with parameters as in this example:
 
     $charge_permission = new PoundPay\ChargePermission(array(
-      'email_address' => 'fred@example.com',
-    ));
+      'email_address' => 'fred@example.com'));
 
 Then, post the charge permission to the server:
 
@@ -103,9 +103,84 @@ id of the created charge permission returned by the server.
 Deactivating a Charge Permission
 --------------------------------
 
-    $charge_permission = PoundPay\ChargePermission.find(charge_permission_sid)
-    $charge_permission->state = 'inactive'
-    $charge_permission.save()
+    $charge_permission = PoundPay\ChargePermission.find(charge_permission_sid);
+    $charge_permission->state = 'inactive';
+    $charge_permission.save();
+
+
+Batching
+--------
+
+In some cases you may wish to batch authorize and escrow a collection of
+payments. By doing so there will be only *one* payer charge for that collection
+of payments. Note that if you do batch authorize a collection of payments that
+it must *also* be batch escrowed.
+
+Batching is designed for shopping carts where you want a collection of payments
+to appear to appear as a single charge.
+
+In order to use batching you simply need to pass `sids` for *all* payments in
+the collection you want to batch to the IFrame:
+
+  <script src="https://www.poundpay.com/js/poundpay.js"></script>
+
+    <div id="pound-root"></div>
+
+    <script>
+      function handlePaymentSuccess() {
+        // do something
+      }
+
+      function handlePaymentError() {
+        // handle error
+      }
+
+      PoundPay.init({
+        payment_sid: [
+            "<?= $payment1->sid ?>",
+            "<?= $payment2->sid ?>",
+            "<?= $payment3->sid ?>"
+            ],
+        success: handlePaymentSuccess,
+        error: handlePaymentError,
+        first_name: "Fred", // Optional
+        last_name: "Nietzsche", // Optional
+        address_street: "990 Guerrero St", // Optional
+        address_city: "San Francisco", // Optional
+        address_state: "California", // Optional
+        address_zip: "94110", // Optional
+        server: "https://www-sandbox.poundpay.com"  // Exclude for production
+      });
+    </script>
+
+Alternatively if you are directly authorizing the payments using a charge
+permission:
+
+    PoundPay\Payment::batch_update(
+        array($payment1->sid, $payment2->sid, $payment3->sid),
+        array('state' => 'authorized'));
+
+Finally you'll need to batch escrow the payments:
+
+    PoundPay\Payment::batch_update(
+        array($payment1->sid, $payment2->sid, $payment3->sid),
+        array('state' => 'escrowed'));
+
+Notice that if you did the following instead an error would be triggered since
+batched payments *must* be authorized and escrowed collectively:
+
+    $payment1->state = 'escrowed';
+    $payment1.save(); // fails
+
+However if you cancel some of the payments prior to batch escrow you should
+exclude them from the batch call:
+
+    $payment1->state = 'canceled';
+    $payment1.save(); // ok
+
+    PoundPay\Payment::batch_update(
+        array($payment2->sid, $payment3->sid),
+        array('state' => 'escrowed'));
 
 
 Unit Tests
