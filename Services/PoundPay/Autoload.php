@@ -2,7 +2,7 @@
 /**
  * PoundPay Client Library
  *
- * @category   APIClients
+ * @category   Web Services
  * @package    PoundPay
  * @author     PoundPay Inc.
  * @version    v2.1.0
@@ -13,7 +13,7 @@
 if (!function_exists('poundpay_autoload')) {
     function poundpay_autoload($class)
     {
-        $namespace = 'PoundPay\\';
+        $namespace = 'Services\\PoundPay\\';
         if (strpos($class, $namespace) === 0) {
             $path = __DIR__ . DIRECTORY_SEPARATOR .
                     substr($class, strlen($namespace)) . '.php';

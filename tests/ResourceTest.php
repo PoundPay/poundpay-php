@@ -1,5 +1,5 @@
 <?php
-namespace PoundPay;
+namespace Services\PoundPay;
 require_once __DIR__ . '/TestCase.php';
 require_once 'HTTP/Request2/Response.php';
 
@@ -8,12 +8,12 @@ class ResourceTest extends TestCase {
     protected $client;
 
     public function resourceProvider() {
-        return array(array('developers', 'PoundPay\Developer'),
-                     array('payments', 'PoundPay\Payment'));
+        return array(array('developers', 'Services\PoundPay\Developer'),
+                     array('payments', 'Services\PoundPay\Payment'));
     }
 
     protected function setUp() {
-        $this->client = $this->getMockBuilder('PoundPay\APIClient')
+        $this->client = $this->getMockBuilder('Services\PoundPay\APIClient')
                        ->disableOriginalConstructor()
                        ->getMock();
         Resource::setClient($this->client);

@@ -1,9 +1,9 @@
 <?php
 
 require_once 'config.php';
-require_once 'PoundPay/Autoload.php';
+require_once 'Services/PoundPay/Autoload.php';
 
-PoundPay\Core::configure(
+Services\PoundPay\Core::configure(
     $CONFIG['poundpay']['sid'],
     $CONFIG['poundpay']['auth_token'],
     $CONFIG['poundpay']['api_url'],
@@ -12,7 +12,7 @@ PoundPay\Core::configure(
 // controllers
 
 function create_user() {
-    $user = new PoundPay\User(array(
+    $user = new Services\PoundPay\User(array(
         'first_name' => $_POST['user_first_name'],
         'last_name' => $_POST['user_last_name'],
         'email_address' => $_POST['user_email_address'],
@@ -24,7 +24,7 @@ function create_user() {
 }
 
 function create_charge_permission() {
-    $chargePermission = new PoundPay\ChargePermission(array(
+    $chargePermission = new Services\PoundPay\ChargePermission(array(
         'email_address' => $_POST['email_address'],
     ));
     $chargePermission = $chargePermission->save();
@@ -35,7 +35,7 @@ function create_charge_permission() {
 
 function find_charge_permission() {
     $emailAddress = $_POST['email_address'];
-    $chargePermissions = PoundPay\ChargePermission::all(array(
+    $chargePermissions = Services\PoundPay\ChargePermission::all(array(
         'email_address' => $emailAddress,
     ));
     if ($chargePermissions == null) {
@@ -49,7 +49,7 @@ function find_charge_permission() {
 }
 
 function deactivate_charge_permission() {
-    $chargePermission = PoundPay\ChargePermission::find($_POST['sid']);
+    $chargePermission = Services\PoundPay\ChargePermission::find($_POST['sid']);
     $chargePermission->state = 'INACTIVE';
     $chargePermission->save();
     header('Content-type: application/json');
@@ -58,7 +58,7 @@ function deactivate_charge_permission() {
 
 function charge_permission_callback() {
     // verify request is from PoundPay; otherwise, 404
-    $poundpay_verifier = new PoundPay\SignatureVerifier($CONFIG['poundpay']['sid'], $CONFIG['poundpay']['auth_token']);
+    $poundpay_verifier = new Services\PoundPay\SignatureVerifier($CONFIG['poundpay']['sid'], $CONFIG['poundpay']['auth_token']);
     if(!$poundpay_verifier->is_authentic_response($_SERVER['HTTP_X_POUNDPAY_SIGNATURE'], $CONFIG['poundpay']['callback_url'], $_POST)) {
       header("HTTP/1.1 404 Not Found");
       exit();
@@ -72,7 +72,7 @@ function charge_permission_callback() {
 }
 
 function create_payment() {
-    $payment = new PoundPay\Payment($_POST);
+    $payment = new Services\PoundPay\Payment($_POST);
     $payment->save();
     header('Content-type: application/json');
     echo json_encode($payment);
@@ -81,14 +81,14 @@ function create_payment() {
 function authorize_payment() {
     php_fix_raw_query();
     if (is_array($_POST['sid'])) {
-        $payments = PoundPay\Payment::batch_update(
+        $payments = Services\PoundPay\Payment::batch_update(
                          $_POST['sid'],
                         array('status' => 'authorized'));
         header('Content-type: text/plain');
         echo print_r($payments);
     }
     else {
-        $payment = PoundPay\Payment::find($_POST['sid']);
+        $payment = Services\PoundPay\Payment::find($_POST['sid']);
         $payment->status = 'authorized';
         $payment->save();
         header('Content-type: text/plain');
@@ -99,14 +99,14 @@ function authorize_payment() {
 function escrow_payment() {
     php_fix_raw_query();
     if (is_array($_POST['sid'])) {
-        $payments = PoundPay\Payment::batch_update(
+        $payments = Services\PoundPay\Payment::batch_update(
                         $_POST['sid'],
                         array('status' => 'escrowed'));
         header('Content-type: text/plain');
         echo print_r($payments);
     }
     else {
-        $payment = PoundPay\Payment::find($_POST['sid']);
+        $payment = Services\PoundPay\Payment::find($_POST['sid']);
         $payment->status = 'escrowed';
         $payment->save();
         header('Content-type: text/plain');
@@ -115,7 +115,7 @@ function escrow_payment() {
 }
 
 function release_payment() {
-    $payment = PoundPay\Payment::find($_POST['sid']);
+    $payment = Services\PoundPay\Payment::find($_POST['sid']);
     $payment->status = 'released';
     $payment->save();
     header('Content-type: text/plain');
@@ -123,7 +123,7 @@ function release_payment() {
 }
 
 function cancel_payment() {
-    $payment = PoundPay\Payment::find($_POST['sid']);
+    $payment = Services\PoundPay\Payment::find($_POST['sid']);
     $payment->status = 'canceled';
     $payment->save();
     header('Content-type: text/plain');
@@ -132,7 +132,7 @@ function cancel_payment() {
 
 function payment_callback() {
     // verify request is from PoundPay; otherwise, 404
-    $poundpay_verifier = new PoundPay\SignatureVerifier($CONFIG['poundpay']['sid'], $CONFIG['poundpay']['auth_token']);
+    $poundpay_verifier = new Services\PoundPay\SignatureVerifier($CONFIG['poundpay']['sid'], $CONFIG['poundpay']['auth_token']);
     if(!$poundpay_verifier->is_authentic_response($_SERVER['HTTP_X_POUNDPAY_SIGNATURE'], $CONFIG['poundpay']['callback_url'], $_POST)) {
       header("HTTP/1.1 404 Not Found");
       exit();

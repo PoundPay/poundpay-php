@@ -1,5 +1,5 @@
 <?php
-namespace PoundPay;
+namespace Services\PoundPay;
 require_once __DIR__ . '/TestCase.php';
 require_once 'HTTP/Request2/Adapter/Curl.php';
 require_once 'PHPUnit/Autoload.php';

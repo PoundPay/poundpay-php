@@ -2,7 +2,7 @@
 /**
  * PoundPay Client Library
  *
- * @category   APIClients
+ * @category   Web Services
  * @package    PoundPay
  * @author     PoundPay Inc.
  * @version    v2.1.0
@@ -10,7 +10,7 @@
  */
 
 
-namespace PoundPay;
+namespace Services\PoundPay;
 require_once __DIR__ . '/Autoload.php';
 
 class Payment extends Resource {
