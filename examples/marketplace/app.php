@@ -83,13 +83,13 @@ function authorize_payment() {
     if (is_array($_POST['sid'])) {
         $payments = Services\PoundPay\Payment::batch_update(
                          $_POST['sid'],
-                        array('status' => 'authorized'));
+                        array('state' => 'authorized'));
         header('Content-type: text/plain');
         echo print_r($payments);
     }
     else {
         $payment = Services\PoundPay\Payment::find($_POST['sid']);
-        $payment->status = 'authorized';
+        $payment->state = 'authorized';
         $payment->save();
         header('Content-type: text/plain');
         echo print_r($payment);
@@ -101,13 +101,13 @@ function escrow_payment() {
     if (is_array($_POST['sid'])) {
         $payments = Services\PoundPay\Payment::batch_update(
                         $_POST['sid'],
-                        array('status' => 'escrowed'));
+                        array('state' => 'escrowed'));
         header('Content-type: text/plain');
         echo print_r($payments);
     }
     else {
         $payment = Services\PoundPay\Payment::find($_POST['sid']);
-        $payment->status = 'escrowed';
+        $payment->state = 'escrowed';
         $payment->save();
         header('Content-type: text/plain');
         echo print_r($payment);
@@ -116,7 +116,7 @@ function escrow_payment() {
 
 function release_payment() {
     $payment = Services\PoundPay\Payment::find($_POST['sid']);
-    $payment->status = 'released';
+    $payment->state = 'released';
     $payment->save();
     header('Content-type: text/plain');
     echo print_r($payment);
@@ -124,7 +124,7 @@ function release_payment() {
 
 function cancel_payment() {
     $payment = Services\PoundPay\Payment::find($_POST['sid']);
-    $payment->status = 'canceled';
+    $payment->state = 'canceled';
     $payment->save();
     header('Content-type: text/plain');
     echo print_r($payment);
